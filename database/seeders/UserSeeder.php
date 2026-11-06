@@ -34,6 +34,44 @@ class UserSeeder extends Seeder
             ]
         );
 
+        // Daftar PIC Ruang Tambahan
+        $picUsers = [
+            [
+                'name' => 'Lega Danu Kumara',
+                'email' => 'lega@sekolah.com',
+                'phone' => '6281210000001',
+            ],
+            [
+                'name' => 'Wahid Abduraman',
+                'email' => 'wahid@sekolah.com',
+                'phone' => '6281210000002',
+            ],
+            [
+                'name' => 'Heri Prasetyo',
+                'email' => 'heri@sekolah.com',
+                'phone' => '6281210000003',
+            ],
+            [
+                'name' => 'Arif Kurniawan',
+                'email' => 'arif@sekolah.com',
+                'phone' => '6281210000004',
+            ],
+        ];
+
+        foreach ($picUsers as $pic) {
+            User::updateOrCreate(
+                ['email' => $pic['email']],
+                [
+                    'name' => $pic['name'],
+                    'password' => Hash::make('password'),
+                    'email_verified_at' => now(),
+                    'role' => 'pic',
+                    'phone' => $pic['phone'],
+                    'is_active' => true,
+                ]
+            );
+        }
+
         // Guru 1
         User::updateOrCreate(
             ['email' => 'guru1@sekolah.com'],
