@@ -17,25 +17,34 @@ class PicAssignmentController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Room::with('pic')->orderBy('name');
+        $query = Room::with(['pic', 'activePicAssignments.pic'])->orderBy('id');
         if ($request->filled('search')) {
             $search = $request->string('search');
             $query->where(function ($roomQuery) use ($search): void {
                 $roomQuery->where('name', 'like', "%{$search}%")
-                    ->orWhereHas('pic', fn ($picQuery) => $picQuery->where('name', 'like', "%{$search}%"));
+                    ->orWhereHas('pic', fn ($picQuery) => $picQuery->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('activePicAssignments.pic', fn ($picQuery) => $picQuery->where('name', 'like', "%{$search}%"));
             });
         }
         if ($request->input('status') === 'assigned') {
-            $query->whereNotNull('pic_id');
+            $query->where(function ($q) {
+                $q->whereNotNull('pic_id')->orWhereHas('activePicAssignments');
+            });
         } elseif ($request->input('status') === 'unassigned') {
-            $query->whereNull('pic_id');
+            $query->whereNull('pic_id')->whereDoesntHave('activePicAssignments');
         }
         if ($request->filled('pic_id')) {
-            $query->where('pic_id', $request->integer('pic_id'));
+            $picId = $request->integer('pic_id');
+            $query->where(function ($q) use ($picId) {
+                $q->where('pic_id', $picId)
+                    ->orWhereHas('activePicAssignments', fn ($aq) => $aq->where('pic_id', $picId));
+            });
         }
         if ($request->filled('category')) {
             $query->where('location', $request->string('category'));
         }
+
+        $assignedCount = Room::whereNotNull('pic_id')->orWhereHas('activePicAssignments')->count();
 
         return view('admin.pic-assignments.index', [
             'rooms' => $query->paginate(15)->withQueryString(),
@@ -43,8 +52,8 @@ class PicAssignmentController extends Controller
             'stats' => [
                 'rooms' => Room::count(),
                 'pics' => User::where('role', 'pic')->count(),
-                'assigned' => Room::whereNotNull('pic_id')->count(),
-                'unassigned' => Room::whereNull('pic_id')->count(),
+                'assigned' => $assignedCount,
+                'unassigned' => max(0, Room::count() - $assignedCount),
             ],
             'categories' => Room::query()->whereNotNull('location')->distinct()->orderBy('location')->pluck('location'),
         ]);
@@ -53,7 +62,7 @@ class PicAssignmentController extends Controller
     public function create(): View
     {
         return view('admin.pic-assignments.create', [
-            'rooms' => Room::whereNull('pic_id')->orderBy('name')->get(),
+            'rooms' => Room::orderBy('id')->get(),
             'pics' => User::where('role', 'pic')->orderBy('name')->get(),
         ]);
     }
@@ -70,13 +79,20 @@ class PicAssignmentController extends Controller
 
         DB::transaction(function () use ($validated, $pic, $request): void {
             $room = Room::whereKey($validated['room_id'])->lockForUpdate()->firstOrFail();
-            abort_if($room->pic_id !== null, 422, 'Ruangan tersebut sudah memiliki PIC aktif.');
+            $alreadyAssigned = PicAssignment::where('room_id', $room->id)
+                ->where('pic_id', $pic->id)
+                ->where('status', 'aktif')
+                ->exists();
+            abort_if($alreadyAssigned, 422, 'PIC tersebut sudah ditugaskan secara aktif pada ruangan ini.');
+
             $assignment = PicAssignment::create([
                 ...$validated,
                 'status' => 'aktif',
                 'assigned_by' => $request->user()->id,
             ]);
-            $room->update(['pic_id' => $pic->id]);
+            if (! $room->pic_id) {
+                $room->update(['pic_id' => $pic->id]);
+            }
             RoomNotification::create([
                 'user_id' => $pic->id,
                 'title' => 'Penugasan PIC baru',

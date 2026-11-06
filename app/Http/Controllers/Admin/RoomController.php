@@ -10,7 +10,7 @@ class RoomController extends Controller
 {
     public function index()
     {
-        $rooms = Room::with('pic')->paginate(10);
+        $rooms = Room::with(['pic', 'activePicAssignments.pic'])->orderBy('id')->paginate(10);
 
         return view('admin.rooms.index', compact('rooms'));
     }

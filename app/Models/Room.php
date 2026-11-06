@@ -23,6 +23,17 @@ class Room extends Model
         return $this->belongsTo(User::class, 'pic_id');
     }
 
+    public function activePicAssignments()
+    {
+        return $this->hasMany(PicAssignment::class)->where('status', 'aktif');
+    }
+
+    public function activePics()
+    {
+        return $this->belongsToMany(User::class, 'pic_assignments', 'room_id', 'pic_id')
+            ->wherePivot('status', 'aktif');
+    }
+
     public function events()
     {
         return $this->hasMany(Event::class);

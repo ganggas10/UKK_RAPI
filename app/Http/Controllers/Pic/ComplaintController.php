@@ -14,8 +14,12 @@ class ComplaintController extends Controller
      */
     public function index()
     {
-        // Ambil semua room_id yang menjadi tanggung jawab PIC ini
-        $myRoomIds = Room::where('pic_id', auth()->id())->pluck('id');
+        $picId = auth()->id();
+
+        // Ambil semua room_id yang menjadi tanggung jawab PIC ini (termasuk multi-PIC)
+        $myRoomIds = Room::where('pic_id', $picId)
+            ->orWhereHas('activePicAssignments', fn ($q) => $q->where('pic_id', $picId))
+            ->pluck('id');
 
         $complaints = Complaint::with(['room', 'reporter'])
             ->whereIn('room_id', $myRoomIds)
@@ -36,8 +40,12 @@ class ComplaintController extends Controller
         // LOGIKA BISNIS #2: CEK DELEGASI PIC
         // PIC hanya bisa ubah complaint yang room-nya dia pegang
         // ============================================================
+        $picId = auth()->id();
         $isMyRoom = Room::where('id', $complaint->room_id)
-            ->where('pic_id', auth()->id())
+            ->where(function ($query) use ($picId) {
+                $query->where('pic_id', $picId)
+                    ->orWhereHas('activePicAssignments', fn ($q) => $q->where('pic_id', $picId));
+            })
             ->exists();
 
         if (! $isMyRoom) {

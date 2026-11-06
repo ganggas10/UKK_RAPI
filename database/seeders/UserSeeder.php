@@ -42,7 +42,7 @@ class UserSeeder extends Seeder
                 'phone' => '6281210000001',
             ],
             [
-                'name' => 'Wahid Abduraman',
+                'name' => 'Wahid Abdurrahman',
                 'email' => 'wahid@sekolah.com',
                 'phone' => '6281210000002',
             ],

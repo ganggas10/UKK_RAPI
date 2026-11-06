@@ -12,10 +12,14 @@ class DashboardController extends Controller
     {
         $pic = auth()->user();
 
-        // Ruangan yang ditangani PIC ini
-        $myRooms = Room::where('pic_id', $pic->id)
+        // Ruangan yang ditangani PIC ini (baik sebagai PIC utama maupun ko-PIC di pic_assignments)
+        $myRooms = Room::where(function ($query) use ($pic) {
+            $query->where('pic_id', $pic->id)
+                ->orWhereHas('activePicAssignments', fn ($q) => $q->where('pic_id', $pic->id));
+        })
             ->withCount('complaints')
             ->withCount(['complaints as open_complaints_count' => fn ($query) => $query->where('status_repair', '!=', 'Sudah Diperbaiki')])
+            ->orderBy('id')
             ->get();
         $myRoomIds = $myRooms->pluck('id');
 

@@ -39,8 +39,18 @@
                         <td>{{ $room->location ?? '-' }}</td>
                         <td>{{ $room->capacity }} orang</td>
                         <td>
-                            @if($room->pic)
-                                <span class="badge bg-info text-dark">{{ $room->pic->name }}</span>
+                            @php
+                                $assignedPics = $room->activePicAssignments->pluck('pic')->filter();
+                                if ($assignedPics->isEmpty() && $room->pic) {
+                                    $assignedPics = collect([$room->pic]);
+                                }
+                            @endphp
+                            @if($assignedPics->isNotEmpty())
+                                <div class="d-flex flex-wrap gap-1">
+                                    @foreach($assignedPics as $picUser)
+                                        <span class="badge bg-info text-dark">{{ $picUser->name }}</span>
+                                    @endforeach
+                                </div>
                             @else
                                 <span class="badge bg-secondary">Belum ada PIC</span>
                             @endif
