@@ -17,9 +17,33 @@
     </div></div>
 
     <div class="row g-3 mb-4">
-        <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><small class="text-muted">Peminjaman</small><h3 class="fw-bold mb-0">{{ $events->count() }}</h3></div></div></div>
-        <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><small class="text-muted">Pengaduan Kerusakan</small><h3 class="fw-bold mb-0">{{ $complaints->count() }}</h3></div></div></div>
-        <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><small class="text-muted">Belum Diperbaiki</small><h3 class="fw-bold text-danger mb-0">{{ $complaintStatus['Belum Diperbaiki'] ?? 0 }}</h3></div></div></div>
+        <div class="col-md-4">
+            <div class="rapi-asset-card pastel-blue">
+                <div>
+                    <div class="rapi-asset-value">{{ $events->count() }}</div>
+                    <div class="rapi-asset-label">Peminjaman</div>
+                </div>
+                <div class="mt-3"><span class="rapi-asset-icon"><i class="bi bi-calendar2-check text-primary"></i></span></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="rapi-asset-card pastel-purple">
+                <div>
+                    <div class="rapi-asset-value">{{ $complaints->count() }}</div>
+                    <div class="rapi-asset-label">Pengaduan Kerusakan</div>
+                </div>
+                <div class="mt-3"><span class="rapi-asset-icon"><i class="bi bi-tools text-primary"></i></span></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="rapi-asset-card pastel-rose">
+                <div>
+                    <div class="rapi-asset-value text-danger">{{ $complaintStatus['Belum Diperbaiki'] ?? 0 }}</div>
+                    <div class="rapi-asset-label">Belum Diperbaiki</div>
+                </div>
+                <div class="mt-3"><span class="rapi-asset-icon"><i class="bi bi-exclamation-triangle text-danger"></i></span></div>
+            </div>
+        </div>
     </div>
 
     <div class="row g-4">

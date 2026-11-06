@@ -29,11 +29,46 @@
     </div>
 
     <div class="row g-3 mb-4">
-        <div class="col-6 col-xl"><div class="card shadow-sm h-100"><div class="card-body"><small class="text-muted">Total Agenda</small><h3 class="fw-bold mb-0">{{ number_format($stats['total']) }}</h3></div></div></div>
-        <div class="col-6 col-xl"><div class="card shadow-sm h-100"><div class="card-body"><small class="text-muted">Agenda Selesai</small><h3 class="fw-bold text-success mb-0">{{ number_format($stats['completed']) }}</h3></div></div></div>
-        <div class="col-6 col-xl"><div class="card shadow-sm h-100"><div class="card-body"><small class="text-muted">Agenda Ditolak</small><h3 class="fw-bold text-danger mb-0">{{ number_format($stats['rejected']) }}</h3></div></div></div>
-        <div class="col-6 col-xl"><div class="card shadow-sm h-100"><div class="card-body"><small class="text-muted">Agenda Dibatalkan</small><h3 class="fw-bold text-secondary mb-0">{{ number_format($stats['cancelled']) }}</h3></div></div></div>
-        <div class="col-12 col-xl"><div class="card shadow-sm h-100"><div class="card-body"><small class="text-muted">Agenda Diproses</small><h3 class="fw-bold text-warning mb-0">{{ number_format($stats['processing']) }}</h3></div></div></div>
+        <div class="col-6 col-xl">
+            <div class="rapi-asset-card pastel-blue">
+                <div>
+                    <div class="rapi-asset-value">{{ number_format($stats['total']) }}</div>
+                    <div class="rapi-asset-label">Total Agenda</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl">
+            <div class="rapi-asset-card pastel-green">
+                <div>
+                    <div class="rapi-asset-value text-success">{{ number_format($stats['completed']) }}</div>
+                    <div class="rapi-asset-label">Agenda Selesai</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl">
+            <div class="rapi-asset-card pastel-rose">
+                <div>
+                    <div class="rapi-asset-value text-danger">{{ number_format($stats['rejected']) }}</div>
+                    <div class="rapi-asset-label">Agenda Ditolak</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-xl">
+            <div class="rapi-asset-card pastel-purple">
+                <div>
+                    <div class="rapi-asset-value text-secondary">{{ number_format($stats['cancelled']) }}</div>
+                    <div class="rapi-asset-label">Agenda Dibatalkan</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xl">
+            <div class="rapi-asset-card pastel-yellow">
+                <div>
+                    <div class="rapi-asset-value text-warning">{{ number_format($stats['processing']) }}</div>
+                    <div class="rapi-asset-label">Agenda Diproses</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="card shadow-sm mb-4">

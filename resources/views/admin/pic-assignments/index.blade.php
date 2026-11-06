@@ -10,8 +10,23 @@
     </div>
     @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
     <div class="row g-3 mb-4">
-        @foreach([['Total Ruangan', $stats['rooms'], 'primary'], ['Total PIC', $stats['pics'], 'info'], ['Sudah Memiliki PIC', $stats['assigned'], 'success'], ['Belum Memiliki PIC', $stats['unassigned'], 'warning']] as [$label, $value, $color])
-            <div class="col-6 col-lg-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><small class="text-muted">{{ $label }}</small><h3 class="fw-bold text-{{ $color }} mb-0">{{ $value }}</h3></div></div></div>
+        @foreach([
+            ['Total Ruangan', $stats['rooms'], 'pastel-blue', 'bi-door-open text-primary'],
+            ['Total PIC', $stats['pics'], 'pastel-purple', 'bi-people text-primary'],
+            ['Sudah Memiliki PIC', $stats['assigned'], 'pastel-green', 'bi-check2-circle text-success'],
+            ['Belum Memiliki PIC', $stats['unassigned'], 'pastel-yellow', 'bi-exclamation-circle text-warning'],
+        ] as [$label, $value, $pastelClass, $iconClass])
+            <div class="col-6 col-lg-3">
+                <div class="rapi-asset-card {{ $pastelClass }}">
+                    <div>
+                        <div class="rapi-asset-value">{{ $value }}</div>
+                        <div class="rapi-asset-label">{{ $label }}</div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="rapi-asset-icon"><i class="bi {{ $iconClass }}"></i></span>
+                    </div>
+                </div>
+            </div>
         @endforeach
     </div>
     <div class="card shadow-sm mb-3"><div class="card-body"><form class="row g-2" method="GET"><div class="col-md-4"><input name="search" value="{{ request('search') }}" class="form-control" placeholder="Cari ruangan atau PIC"></div><div class="col-md-2"><select name="category" class="form-select"><option value="">Semua Kategori</option>@foreach($categories as $category)<option value="{{ $category }}" @selected(request('category') === $category)>{{ $category }}</option>@endforeach</select></div><div class="col-md-2"><select name="pic_id" class="form-select"><option value="">Semua PIC</option>@foreach($pics as $pic)<option value="{{ $pic->id }}" @selected(request('pic_id') == $pic->id)>{{ $pic->name }}</option>@endforeach</select></div><div class="col-md-2"><select name="status" class="form-select"><option value="">Semua Status</option><option value="assigned" @selected(request('status') === 'assigned')>Sudah Ditugaskan</option><option value="unassigned" @selected(request('status') === 'unassigned')>Belum Ditugaskan</option></select></div><div class="col-md-2 d-flex gap-2"><button class="btn btn-primary flex-grow-1">Filter</button><a href="{{ route('admin.pic-assignments.index') }}" class="btn btn-outline-secondary">Reset</a></div></form></div></div>
