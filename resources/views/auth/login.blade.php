@@ -38,12 +38,17 @@
         </div>
 
         <div class="d-grid">
-            <button type="submit" class="btn btn-primary btn-lg">Masuk</button>
+            <button type="submit" class="btn btn-primary btn-lg">Masuk ke Sistem</button>
+        </div>
+
+        <div class="mt-3 p-2 rounded bg-light border text-center small text-muted">
+            <i class="bi bi-info-circle text-primary me-1"></i>
+            Dapat digunakan oleh <strong>Waka/Admin</strong>, <strong>PIC Ruang</strong>, serta <strong>Guru &amp; Organisasi</strong> (terutama pengguna iOS/Web).
         </div>
 
         <div class="text-center mt-3">
-            <a href="{{ route('calendar.public') }}" class="text-muted small">
-                Lihat Kalender Tanpa Login
+            <a href="{{ route('calendar.public') }}" class="text-muted small fw-semibold text-decoration-none">
+                <i class="bi bi-arrow-left me-1"></i> Kembali ke Beranda &amp; Kalender Publik
             </a>
         </div>
     </form>

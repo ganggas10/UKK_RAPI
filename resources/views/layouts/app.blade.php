@@ -7,16 +7,19 @@
 
     {{-- Bootstrap 5 CSS --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>
 <body>
 
 {{-- =================== TOP NAVBAR =================== --}}
-<nav class="navbar navbar-expand-md navbar-dark bg-primary shadow-sm sticky-top">
-    <div class="container-fluid px-3">
-        <a class="navbar-brand" href="{{ route('calendar.public') }}">
-            RAPI-Sekolah
+<nav class="navbar navbar-expand-md navbar-light bg-white sticky-top">
+    <div class="container-fluid px-3 px-md-4">
+        <a class="navbar-brand d-inline-flex align-items-center gap-2 text-dark" href="{{ route('calendar.public') }}">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-3 bg-primary text-white fw-bold" style="width: 34px; height: 34px; font-size: 0.95rem;">R</span>
+            <span>RAPI-Sekolah<span class="text-primary">.</span></span>
         </a>
         <div class="d-flex align-items-center gap-2">
             {{-- Badge notifikasi guru --}}
@@ -26,7 +29,7 @@
                         $unreadCount = \App\Models\RoomNotification::where('user_id', auth()->id())
                                        ->where('is_read', false)->count();
                     @endphp
-                    <a href="{{ route('guru.dashboard') }}" class="btn btn-outline-light btn-sm position-relative">
+                    <a href="{{ route('guru.dashboard') }}" class="btn btn-outline-primary btn-sm position-relative">
                         Notifikasi
                         @if($unreadCount > 0)
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -40,8 +43,8 @@
             {{-- Dropdown user --}}
             @auth
             <div class="dropdown">
-                <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    <span class="d-none d-sm-inline ms-1">{{ Str::limit(auth()->user()->name, 12) }}</span>
+                <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <span class="d-none d-sm-inline ms-1">{{ Str::limit(auth()->user()->name, 14) }}</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     <li><span class="dropdown-item-text text-muted small">{{ strtoupper(auth()->user()->role) }}</span></li>
@@ -56,7 +59,7 @@
                 </ul>
             </div>
             @else
-            <a href="{{ route('login') }}" class="btn btn-outline-light btn-sm">Login</a>
+            <a href="{{ route('login') }}" class="btn btn-primary btn-sm">Login</a>
             @endauth
         </div>
     </div>

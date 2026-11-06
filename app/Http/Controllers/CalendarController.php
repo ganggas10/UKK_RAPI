@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Complaint;
 use App\Models\Event;
 use App\Models\NationalHoliday;
+use App\Models\Room;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -12,7 +14,7 @@ use Illuminate\View\View;
 class CalendarController extends Controller
 {
     /**
-     * Halaman utama kalender publik
+     * Halaman utama kalender publik & beranda RAPI-Sekolah
      */
     public function index(): View
     {
@@ -22,7 +24,27 @@ class CalendarController extends Controller
             ? NationalHoliday::distinct()->pluck('year')->sort()->values()->toArray()
             : [];
 
-        return view('calendar.index', compact('categories', 'categoryColors', 'availableYears'));
+        $totalRooms = Schema::hasTable('rooms') ? Room::count() : 65;
+        $totalApprovedEvents = Schema::hasTable('events')
+            ? Event::whereIn('status', ['approved', 'moved'])->count()
+            : 0;
+        $totalResolvedComplaints = Schema::hasTable('complaints')
+            ? Complaint::where('status_repair', 'selesai')->count()
+            : 0;
+
+        $apkFileExists = file_exists(public_path('apk/rapi-sekolah.apk'));
+        $apkDownloadUrl = $apkFileExists ? asset('apk/rapi-sekolah.apk') : '#unduh-apk';
+
+        return view('calendar.index', compact(
+            'categories',
+            'categoryColors',
+            'availableYears',
+            'totalRooms',
+            'totalApprovedEvents',
+            'totalResolvedComplaints',
+            'apkFileExists',
+            'apkDownloadUrl',
+        ));
     }
 
     /**
