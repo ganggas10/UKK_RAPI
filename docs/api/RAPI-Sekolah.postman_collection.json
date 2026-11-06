@@ -1,0 +1,121 @@
+{
+  "info": {
+    "_postman_id": "7a2db6fb-0d5f-4d3d-9d8d-rapi-sekolah",
+    "name": "RAPI-Sekolah API",
+    "description": "Collection API RAPI-Sekolah untuk kalender publik dan aplikasi mobile guru/organisasi/siswa.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000" },
+    { "key": "token", "value": "" },
+    { "key": "event_id", "value": "1" },
+    { "key": "complaint_id", "value": "1" },
+    { "key": "notification_id", "value": "1" },
+    { "key": "room_id", "value": "1" },
+    { "key": "email", "value": "guru@example.com" },
+    { "key": "password", "value": "password" },
+    { "key": "image_path", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Publik",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{base_url}}/api/login"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Login berhasil', function () { pm.response.to.have.status(200); });", "const json = pm.response.json();", "pm.collectionVariables.set('token', json.token);", "pm.collectionVariables.set('event_id', json.data?.id || pm.collectionVariables.get('event_id'));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Kalender Semua Event",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/events" }
+        },
+        {
+          "name": "Kalender Per Bulan",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/events?month=2026-10" }
+        },
+        {
+          "name": "Kalender Per Tanggal",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/events?date=2026-10-22" }
+        },
+        {
+          "name": "Detail Event Publik",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/events/{{event_id}}" }
+        },
+        {
+          "name": "Daftar Ruangan",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/rooms" }
+        },
+        {
+          "name": "Cek Ketersediaan Ruangan",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }], "url": "{{base_url}}/api/rooms/available?date=2026-10-22&start_time=08:00&end_time=10:00" }
+        }
+      ]
+    },
+    {
+      "name": "Mobile Guru Organisasi",
+      "item": [
+        {
+          "name": "Profil Saya",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{base_url}}/api/me" }
+        },
+        {
+          "name": "Ajukan Peminjaman Event",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Rapat Organisasi\",\n  \"description\": \"Rapat persiapan kegiatan sekolah\",\n  \"room_id\": {{room_id}},\n  \"date\": \"2026-10-25\",\n  \"start_time\": \"08:00\",\n  \"end_time\": \"10:00\"\n}", "options": { "raw": { "language": "json" } } },
+            "url": "{{base_url}}/api/events"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('event_id', pm.response.json().data.id); }"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Event Saya",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{base_url}}/api/my-events" }
+        },
+        {
+          "name": "Kirim Laporan Kerusakan",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "formdata", "formdata": [
+              { "key": "room_id", "value": "{{room_id}}", "type": "text" },
+              { "key": "description", "value": "Lampu ruangan mati dan perlu diperiksa", "type": "text" },
+              { "key": "photo", "type": "file", "src": "{{image_path}}" }
+            ] },
+            "url": "{{base_url}}/api/complaints"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('complaint_id', pm.response.json().data.id); }"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "Laporan Saya",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{base_url}}/api/complaints" }
+        },
+        {
+          "name": "Detail Laporan",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{base_url}}/api/complaints/{{complaint_id}}" }
+        },
+        {
+          "name": "Daftar Notifikasi",
+          "request": { "method": "GET", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{base_url}}/api/notifications" }
+        },
+        {
+          "name": "Tandai Notifikasi Dibaca",
+          "request": { "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{base_url}}/api/notifications/{{notification_id}}/read" }
+        },
+        {
+          "name": "Tandai Semua Notifikasi Dibaca",
+          "request": { "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{base_url}}/api/notifications/read-all" }
+        },
+        {
+          "name": "Logout",
+          "request": { "method": "POST", "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{base_url}}/api/logout" }
+        }
+      ]
+    }
+  ]
+}
