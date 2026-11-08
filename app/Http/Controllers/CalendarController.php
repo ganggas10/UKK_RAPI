@@ -32,8 +32,9 @@ class CalendarController extends Controller
             ? Complaint::where('status_repair', 'selesai')->count()
             : 0;
 
-        $apkFileExists = file_exists(public_path('apk/rapi-sekolah.apk'));
-        $apkDownloadUrl = $apkFileExists ? asset('apk/rapi-sekolah.apk') : '#unduh-apk';
+        $apkPath = self::resolveApkPath();
+        $apkFileExists = $apkPath !== null;
+        $apkDownloadUrl = $apkFileExists ? route('apk.download') : '#unduh-apk';
 
         return view('calendar.index', compact(
             'categories',
@@ -45,6 +46,51 @@ class CalendarController extends Controller
             'apkFileExists',
             'apkDownloadUrl',
         ));
+    }
+
+    /**
+     * Cari lokasi berkas APK yang tersedia di server web maupun folder build mobile
+     */
+    public static function resolveApkPath(): ?string
+    {
+        $publicApk = public_path('apk/rapi-sekolah.apk');
+        $mobileCandidates = [
+            base_path('../mobile/rapi-sekolah.apk'),
+            base_path('../mobile/build/app/outputs/flutter-apk/app-release.apk'),
+        ];
+
+        foreach ($mobileCandidates as $source) {
+            if (is_file($source)) {
+                if (! is_file($publicApk) || filemtime($source) > filemtime($publicApk)) {
+                    try {
+                        if (! is_dir(dirname($publicApk))) {
+                            @mkdir(dirname($publicApk), 0775, true);
+                        }
+                        @copy($source, $publicApk);
+                    } catch (\Throwable $e) {
+                        // Gunakan $source secara langsung jika gagal menyalin ke public/apk
+                    }
+                }
+                return is_file($publicApk) ? $publicApk : $source;
+            }
+        }
+
+        return is_file($publicApk) ? $publicApk : null;
+    }
+
+    /**
+     * Unduh langsung berkas APK RAPI-Sekolah
+     */
+    public function downloadApk()
+    {
+        $apkPath = self::resolveApkPath();
+
+        abort_if($apkPath === null, 404, 'Berkas APK belum tersedia.');
+
+        return response()->download($apkPath, 'RAPI-Sekolah.apk', [
+            'Content-Type' => 'application/vnd.android.package-archive',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
+        ]);
     }
 
     /**

@@ -595,7 +595,12 @@
                 <li><a href="#beranda">Beranda</a></li>
                 <li><a href="#fitur-utama">Fitur Sistem</a></li>
                 <li><a href="#kalender-agenda">Kalender Agenda</a></li>
-                <li><a href="#akses-sistem">Unduh APK</a></li>
+                <li>
+                    <a href="{{ $apkFileExists ? $apkDownloadUrl : '#akses-sistem' }}"
+                       @if($apkFileExists) download="RAPI-Sekolah.apk" @endif>
+                        Unduh APK
+                    </a>
+                </li>
                 @auth
                     @php
                         $dashboardUrl = match(auth()->user()->role) {
@@ -647,7 +652,7 @@
                     @endauth
 
                     <a href="{{ $apkFileExists ? $apkDownloadUrl : '#akses-sistem' }}"
-                       @if($apkFileExists) download @else data-bs-toggle="modal" data-bs-target="#apkDownloadModal" @endif
+                       @if($apkFileExists) download="RAPI-Sekolah.apk" @else data-bs-toggle="modal" data-bs-target="#apkDownloadModal" @endif
                        class="btn-authentik-outline">
                         <i class="bi bi-android2 text-success"></i> Unduh APK Mobile
                     </a>
@@ -928,7 +933,7 @@
                             <i class="bi bi-box-arrow-in-right"></i> Login ke Sistem Web
                         </a>
                         <a href="{{ $apkFileExists ? $apkDownloadUrl : '#unduh-apk' }}"
-                           @if($apkFileExists) download @else data-bs-toggle="modal" data-bs-target="#apkDownloadModal" @endif
+                           @if($apkFileExists) download="RAPI-Sekolah.apk" @else data-bs-toggle="modal" data-bs-target="#apkDownloadModal" @endif
                            class="btn-authentik-outline justify-content-center">
                             <i class="bi bi-download"></i> Unduh APK RAPI-Sekolah
                         </a>

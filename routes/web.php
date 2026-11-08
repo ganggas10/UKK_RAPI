@@ -24,6 +24,7 @@ Route::get('/', [CalendarController::class, 'index'])->name('calendar.public');
 Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
 Route::get('/calendar/events', [CalendarController::class, 'getEvents'])->name('calendar.events');
 Route::get('/calendar/years', [CalendarController::class, 'getYears'])->name('calendar.years');
+Route::get('/download-apk', [CalendarController::class, 'downloadApk'])->name('apk.download');
 
 // ============================================================
 // AUTH ROUTES (dari Breeze)

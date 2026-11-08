@@ -208,7 +208,7 @@ class EventApiController extends Controller
         $startDate = $request->input('start_date', $request->date);
         $endDate = $request->input('end_date', $request->date);
 
-        $rooms = Room::all()->map(function ($room) use ($request) {
+        $rooms = Room::all()->map(function ($room) use ($request, $startDate, $endDate) {
             $conflict = Event::overlapping(
                 $room->id,
                 $startDate,
