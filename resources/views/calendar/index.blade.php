@@ -596,8 +596,7 @@
                 <li><a href="#fitur-utama">Fitur Sistem</a></li>
                 <li><a href="#kalender-agenda">Kalender Agenda</a></li>
                 <li>
-                    <a href="{{ $apkFileExists ? $apkDownloadUrl : '#akses-sistem' }}"
-                       @if($apkFileExists) download="RAPI-Sekolah.apk" @endif>
+                    <a href="{{ route('apk.download') }}" download="RAPI-Sekolah.apk">
                         Unduh APK
                     </a>
                 </li>
@@ -628,6 +627,15 @@
     </div>
 </header>
 
+@if(session('apk_error'))
+    <div class="container mt-3">
+        <div class="alert alert-warning alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i> {{ session('apk_error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+@endif
+
 {{-- =================== 2. HERO SECTION (GAYA AUTHENTIK) =================== --}}
 <section class="hero-section" id="beranda">
     <div class="container">
@@ -651,8 +659,7 @@
                         </a>
                     @endauth
 
-                    <a href="{{ $apkFileExists ? $apkDownloadUrl : '#akses-sistem' }}"
-                       @if($apkFileExists) download="RAPI-Sekolah.apk" @else data-bs-toggle="modal" data-bs-target="#apkDownloadModal" @endif
+                    <a href="{{ route('apk.download') }}" download="RAPI-Sekolah.apk"
                        class="btn-authentik-outline">
                         <i class="bi bi-android2 text-success"></i> Unduh APK Mobile
                     </a>
@@ -932,8 +939,7 @@
                         <a href="{{ route('login') }}" class="btn-authentik-primary justify-content-center">
                             <i class="bi bi-box-arrow-in-right"></i> Login ke Sistem Web
                         </a>
-                        <a href="{{ $apkFileExists ? $apkDownloadUrl : '#unduh-apk' }}"
-                           @if($apkFileExists) download="RAPI-Sekolah.apk" @else data-bs-toggle="modal" data-bs-target="#apkDownloadModal" @endif
+                        <a href="{{ route('apk.download') }}" download="RAPI-Sekolah.apk"
                            class="btn-authentik-outline justify-content-center">
                             <i class="bi bi-download"></i> Unduh APK RAPI-Sekolah
                         </a>
@@ -992,7 +998,7 @@
                         <ul class="footer-links">
                             <li><a href="#kalender-agenda">Jadwal Ruangan</a></li>
                             <li><a href="#kalender-agenda">Kalender Nasional</a></li>
-                            <li><a href="{{ $apkFileExists ? $apkDownloadUrl : '#' }}" @if(!$apkFileExists) data-bs-toggle="modal" data-bs-target="#apkDownloadModal" @endif>Unduh APK Android</a></li>
+                            <li><a href="{{ route('apk.download') }}" download="RAPI-Sekolah.apk">Unduh APK Android</a></li>
                         </ul>
                     </div>
 

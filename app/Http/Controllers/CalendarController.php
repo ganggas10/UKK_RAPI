@@ -53,29 +53,45 @@ class CalendarController extends Controller
      */
     public static function resolveApkPath(): ?string
     {
-        $publicApk = public_path('apk/rapi-sekolah.apk');
-        $mobileCandidates = [
+        // 1. Lokasi file yang pasti / prioritas utama
+        $candidates = [
+            public_path('apk/rapi-sekolah.apk'),
+            base_path('apk/rapi-sekolah.apk'),
+            base_path('public/apk/rapi-sekolah.apk'),
+            public_path('rapi-sekolah.apk'),
+            base_path('rapi-sekolah.apk'),
             base_path('../mobile/rapi-sekolah.apk'),
             base_path('../mobile/build/app/outputs/flutter-apk/app-release.apk'),
         ];
 
-        foreach ($mobileCandidates as $source) {
-            if (is_file($source)) {
-                if (! is_file($publicApk) || filemtime($source) > filemtime($publicApk)) {
-                    try {
-                        if (! is_dir(dirname($publicApk))) {
-                            @mkdir(dirname($publicApk), 0775, true);
-                        }
-                        @copy($source, $publicApk);
-                    } catch (\Throwable $e) {
-                        // Gunakan $source secara langsung jika gagal menyalin ke public/apk
-                    }
-                }
-                return is_file($publicApk) ? $publicApk : $source;
+        foreach ($candidates as $candidate) {
+            if (is_file($candidate)) {
+                return $candidate;
             }
         }
 
-        return is_file($publicApk) ? $publicApk : null;
+        // 2. Scan folder-folder umum jika nama filenya sedikit berbeda (misal RAPI-Sekolah.apk, app-release.apk)
+        $directories = [
+            public_path('apk'),
+            base_path('apk'),
+            base_path('public/apk'),
+            public_path(),
+            base_path(),
+        ];
+
+        foreach ($directories as $dir) {
+            if (is_dir($dir)) {
+                $files = glob($dir.'/*.apk');
+                if (! empty($files)) {
+                    // Urutkan berdasarkan yang paling baru diunggah
+                    usort($files, fn ($a, $b) => filemtime($b) <=> filemtime($a));
+
+                    return $files[0];
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -85,7 +101,10 @@ class CalendarController extends Controller
     {
         $apkPath = self::resolveApkPath();
 
-        abort_if($apkPath === null, 404, 'Berkas APK belum tersedia.');
+        if ($apkPath === null) {
+            return redirect()->to(route('calendar.public').'#akses-sistem')
+                ->with('apk_error', 'Berkas APK sedang dipersiapkan di server. Silakan coba beberapa saat lagi.');
+        }
 
         return response()->download($apkPath, 'RAPI-Sekolah.apk', [
             'Content-Type' => 'application/vnd.android.package-archive',
