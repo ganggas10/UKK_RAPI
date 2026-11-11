@@ -144,4 +144,3 @@ class NationalHolidayController extends Controller
         }
     }
 }
-

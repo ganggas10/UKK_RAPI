@@ -35,18 +35,19 @@ class EventController extends Controller
             'room_id' => 'required|exists:rooms,id',
             'date' => 'nullable|date|after:today',
             'start_date' => 'required_without:date|date|after:today',
-            'end_date' => 'required_without:date|date|after_or_equal:start_date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
             'start_session' => ['required', 'string', 'exists:school_sessions,name'],
             'end_session' => ['required', 'string', 'exists:school_sessions,name'],
         ], [
             'date.after' => 'Pengajuan peminjaman ruangan wajib dilakukan minimal 1 hari sebelum tanggal penggunaan. Silakan pilih tanggal penggunaan yang lain.',
             'start_date.after' => 'Pengajuan peminjaman ruangan wajib dilakukan minimal 1 hari sebelum tanggal penggunaan. Silakan pilih tanggal penggunaan yang lain.',
+            'end_date.after_or_equal' => 'Tanggal selesai peminjaman tidak boleh lebih awal daripada tanggal mulai.',
             'start_session.exists' => 'Sesi mulai yang dipilih tidak valid atau sudah tidak aktif.',
             'end_session.exists' => 'Sesi selesai yang dipilih tidak valid atau sudah tidak aktif.',
         ]);
 
         $validated['start_date'] = $validated['start_date'] ?? $validated['date'];
-        $validated['end_date'] = $validated['end_date'] ?? $validated['date'];
+        $validated['end_date'] = ! empty($validated['end_date']) ? $validated['end_date'] : $validated['start_date'];
         $validated['date'] = $validated['start_date'];
 
         $startSessionModel = SchoolSession::where('name', $validated['start_session'])->first();

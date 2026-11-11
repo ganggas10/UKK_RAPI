@@ -69,10 +69,10 @@
                         @error('start_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Tanggal Selesai Peminjaman <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold">Tanggal Selesai Peminjaman</label>
                         <input type="date" name="end_date" id="end_date" class="form-control @error('end_date') is-invalid @enderror"
-                               value="{{ old('end_date') }}" min="{{ date('Y-m-d', strtotime('+1 day')) }}" required>
-                        <div class="form-text text-muted small">Sama atau setelah tanggal mulai.</div>
+                               value="{{ old('end_date') }}" min="{{ date('Y-m-d', strtotime('+1 day')) }}">
+                        <div class="form-text text-muted small">Kosongkan jika peminjaman hanya untuk 1 hari.</div>
                         @error('end_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-12">
@@ -148,13 +148,23 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         end.min = start.value;
-        if (!end.value) return;
+        if (!end.value) {
+            info.classList.remove('d-none');
+            info.textContent = 'Durasi peminjaman: 1 Hari (Satu Hari)';
+            info.classList.remove('alert-danger');
+            info.classList.add('alert-info');
+            return;
+        }
         const endDate = new Date(`${end.value}T00:00:00`);
         const days = Math.round((endDate - startDate) / 86400000) + 1;
         info.classList.remove('d-none');
         info.textContent = days > 0 ? `Durasi peminjaman: ${days} Hari` : 'Tanggal selesai harus sama atau setelah tanggal mulai.';
         info.classList.toggle('alert-danger', days <= 0);
         info.classList.toggle('alert-info', days > 0);
+        if (days <= 0) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50');
+        }
     };
 
     start.addEventListener('change', updateValidation);

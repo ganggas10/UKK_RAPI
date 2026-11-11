@@ -10,12 +10,19 @@ class NationalHoliday extends Model
     use HasFactory;
 
     public const CATEGORY_LIBUR_NASIONAL = 'libur_nasional';
+
     public const CATEGORY_KEAGAMAAN_ISLAM = 'keagamaan_islam';
+
     public const CATEGORY_KEAGAMAAN_KRISTEN = 'keagamaan_kristen';
+
     public const CATEGORY_KEAGAMAAN_HINDU = 'keagamaan_hindu';
+
     public const CATEGORY_KEAGAMAAN_BUDDHA = 'keagamaan_buddha';
+
     public const CATEGORY_KEAGAMAAN_KONGHUCU = 'keagamaan_konghucu';
+
     public const CATEGORY_PERINGATAN_NASIONAL = 'peringatan_nasional';
+
     public const CATEGORY_CUTI_BERSAMA = 'cuti_bersama';
 
     protected $fillable = [
@@ -83,7 +90,7 @@ class NationalHoliday extends Model
         if (in_array($this->category, [self::CATEGORY_KEAGAMAAN_BUDDHA, self::CATEGORY_CUTI_BERSAMA], true)) {
             return '#1e293b';
         }
+
         return '#ffffff';
     }
 }
-

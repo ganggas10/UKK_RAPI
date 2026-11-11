@@ -240,4 +240,89 @@ class SchoolSessionAndBookingH1Test extends TestCase
         $this->assertSame('08:00:00', $event->fresh()->end_time);
         $this->assertSame('Sesi 1 - Sesi 1', $event->fresh()->session);
     }
+
+    public function test_guru_can_create_single_day_booking_without_end_date(): void
+    {
+        $guru = User::factory()->create(['role' => 'guru']);
+        $room = Room::create(['name' => 'Lab Biologi', 'capacity' => 36]);
+        $targetDate = now()->addDays(2)->format('Y-m-d');
+
+        $response = $this->actingAs($guru)->post(route('guru.events.store'), [
+            'title' => 'Praktikum 1 Hari',
+            'room_id' => $room->id,
+            'start_date' => $targetDate,
+            'end_date' => null, // Dikosongkan untuk peminjaman 1 hari
+            'start_session' => 'Sesi 1',
+            'end_session' => 'Sesi 2',
+        ]);
+
+        $response->assertRedirect(route('guru.events.index'));
+        $event = Event::where('title', 'Praktikum 1 Hari')->firstOrFail();
+        $this->assertSame($guru->id, $event->user_id);
+        $this->assertSame($room->id, $event->room_id);
+        $this->assertSame($targetDate, $event->start_date->format('Y-m-d'));
+        $this->assertSame($targetDate, $event->end_date->format('Y-m-d'));
+        $this->assertSame('pending', $event->status);
+    }
+
+    public function test_admin_can_create_single_day_booking_without_end_date(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $room = Room::create(['name' => 'Aula Utama', 'capacity' => 200]);
+        $targetDate = now()->addDays(3)->format('Y-m-d');
+
+        $response = $this->actingAs($admin)->post(route('admin.events.store'), [
+            'title' => 'Rapat Pleno 1 Hari',
+            'room_id' => $room->id,
+            'start_date' => $targetDate,
+            'end_date' => '', // String kosong untuk 1 hari
+            'start_session' => 'Sesi 1',
+            'end_session' => 'Sesi 3',
+        ]);
+
+        $response->assertRedirect(route('admin.events.index'));
+        $event = Event::where('title', 'Rapat Pleno 1 Hari')->firstOrFail();
+        $this->assertSame($room->id, $event->room_id);
+        $this->assertSame($targetDate, $event->start_date->format('Y-m-d'));
+        $this->assertSame($targetDate, $event->end_date->format('Y-m-d'));
+        $this->assertSame('approved', $event->status);
+    }
+
+    public function test_booking_with_end_date_before_start_date_is_rejected(): void
+    {
+        $guru = User::factory()->create(['role' => 'guru']);
+        $room = Room::create(['name' => 'Ruang Teori', 'capacity' => 30]);
+
+        $response = $this->actingAs($guru)->post(route('guru.events.store'), [
+            'title' => 'Peminjaman Tanggal Terbalik',
+            'room_id' => $room->id,
+            'start_date' => now()->addDays(5)->format('Y-m-d'),
+            'end_date' => now()->addDays(3)->format('Y-m-d'),
+            'start_session' => 'Sesi 1',
+            'end_session' => 'Sesi 2',
+        ]);
+
+        $response->assertSessionHasErrors(['end_date']);
+    }
+
+    public function test_api_can_create_single_day_booking_without_end_date(): void
+    {
+        $guru = User::factory()->create(['role' => 'guru']);
+        $room = Room::create(['name' => 'Lab Bahasa', 'capacity' => 32]);
+        $targetDate = now()->addDays(2)->format('Y-m-d');
+
+        $response = $this->actingAs($guru, 'sanctum')->postJson('/api/events', [
+            'title' => 'Listening Test API',
+            'room_id' => $room->id,
+            'start_date' => $targetDate,
+            'start_session' => 'Sesi 1',
+            'end_session' => 'Sesi 2',
+        ]);
+
+        $response->assertStatus(201);
+        $event = Event::where('title', 'Listening Test API')->firstOrFail();
+        $this->assertSame($room->id, $event->room_id);
+        $this->assertSame($targetDate, $event->start_date->format('Y-m-d'));
+        $this->assertSame($targetDate, $event->end_date->format('Y-m-d'));
+    }
 }

@@ -36,20 +36,24 @@ Sistem membagi hak akses pengguna ke dalam **5 peran (role)** sesuai tugas dan t
 
 ---
 
-## ⚙️ 5 Logika Bisnis Utama (Core Business Rules)
+## ⚙️ 7 Logika Bisnis Utama (Core Business Rules)
 
 1. **Pencegahan Bentrok Jadwal Otomatis (*Conflict Prevention*):**
-   Sistem secara otomatis menolak pengajuan peminjaman ruangan apabila ruangan yang dipilih sudah dipesan oleh kegiatan lain (`pending`, `approved`, atau `moved`) pada irisan rentang tanggal dan sesi jam pelajaran yang sama (`Sesi 1` [07:15] s/d `Sesi 11` [15:30]).
-2. **Otorisasi Delegasi Ruangan & Multi-PIC (*PIC Room Delegation*):**
+   Sistem secara otomatis menolak pengajuan peminjaman ruangan apabila ruangan yang dipilih sudah dipesan oleh kegiatan lain (`pending`, `approved`, atau `moved`) pada irisan rentang tanggal dan sesi jam pelajaran yang sama.
+2. **Kelola Sesi Dinamis & Aturan Peminjaman Minimal H-1:**
+   Waka/Admin dapat mengatur jam operasional sesi belajar sekolah secara dinamis. Seluruh pengajuan peminjaman ruangan wajib diajukan minimal **1 hari sebelum tanggal penggunaan ruangan (H-1)** untuk menjamin kesiapan sarana-prasarana. Pengguna cukup mengisi tanggal mulai untuk peminjaman 1 hari (tanggal selesai opsional dan otomatis disamakan).
+3. **Otorisasi Delegasi Ruangan & Multi-PIC (*PIC Room Delegation*):**
    Satu ruangan/laboratorium dapat ditugaskan kepada satu atau beberapa PIC sekaligus (**Multi-PIC**). Setiap PIC Ruang hanya memiliki otorisasi untuk menindaklanjuti laporan pengaduan kerusakan pada ruangan yang secara aktif didelegasikan kepadanya.
-3. **Tiga Status Mutlak Perbaikan Fasilitas (*Strict 3-State Workflow*):**
+4. **Proteksi Integritas Pengguna & Penugasan PIC:**
+   Akun PIC Ruang yang masih memiliki penugasan ruangan aktif tidak dapat dihapus sebelum penugasannya dialihkan demi menjaga integritas data. Selain itu, Admin yang sedang login diproteksi dari menghapus akunnya sendiri baik melalui UI maupun URL langsung.
+5. **Tiga Status Mutlak Perbaikan Fasilitas (*Strict 3-State Workflow*):**
    Setiap laporan kerusakan fasilitas wajib menyertakan unggahan foto bukti (maks. 5 MB) dan hanya dapat diperbarui oleh PIC Ruang melalui 3 tahapan status mutlak:
    - 🔴 `Belum Diperbaiki`
    - 🟡 `Menunggu Spare Part`
    - 🟢 `Sudah Diperbaiki` *(bersifat **final / terkunci** dan tidak dapat diubah kembali)*
-4. **Eskalasi Langsung via WhatsApp (*WhatsApp Escalation*):**
+6. **Eskalasi Langsung via WhatsApp (*WhatsApp Escalation*):**
    Waka / Admin dapat mengirimkan peringatan tindak lanjut secara langsung ke nomor WhatsApp PIC Ruang terkait hanya dengan satu klik tombol (`wa.me`) dari Dashboard Admin.
-5. **Override Pindah Ruangan & Notifikasi Otomatis (*Room Override & Auto-Notification*):**
+7. **Override Pindah Ruangan & Notifikasi Otomatis (*Room Override & Auto-Notification*):**
    Apabila suatu ruangan dibutuhkan untuk kegiatan prioritas sekolah, Waka / Admin dapat memindahkan (*override*) jadwal kegiatan Guru/Organisasi ke ruangan lain yang masih kosong. Sistem otomatis mencatat jejak perpindahan dan mengirimkan notifikasi (`RoomNotification`) ke akun Guru/Organisasi terkait.
 
 ---
@@ -62,7 +66,7 @@ Penjelasan teknis mendalam beserta lokasi *source code* (file, method, dan nomor
 2. [02 - Autentikasi Multi-Role, Hak Akses & Reset Password OTP 6 Digit](./penjelasan/02-autentikasi-dan-manajemen-hak-akses-role.md)
 3. [03 - Dashboard Multi-Role (Waka/Admin, PIC Ruang, Guru & Organisasi)](./penjelasan/03-dashboard-multi-role.md)
 4. [04 - Manajemen Data 65 Ruangan & Laboratorium Sekolah](./penjelasan/04-manajemen-ruangan.md)
-5. [05 - Manajemen Pengguna (User Management)](./penjelasan/05-manajemen-pengguna.md)
+5. [05 - Manajemen Pengguna & Proteksi Keamanan Akun](./penjelasan/05-manajemen-pengguna.md)
 6. [06 - Manajemen Penugasan PIC Ruang & Dukungan Multi-PIC](./penjelasan/06-manajemen-penugasan-pic-ruang.md)
 7. [07 - Pengajuan Peminjaman Ruangan & Pencegahan Bentrok Jadwal (Anti-Bentrok)](./penjelasan/07-pengajuan-peminjaman-ruangan-dan-anti-bentrok.md)
 8. [08 - Persetujuan Agenda & Override Pindah Ruangan oleh Waka/Admin](./penjelasan/08-persetujuan-agenda-dan-pindah-ruang-override.md)
@@ -71,6 +75,7 @@ Penjelasan teknis mendalam beserta lokasi *source code* (file, method, dan nomor
 11. [11 - Laporan Berkala Peminjaman & Pengaduan (Harian & Bulanan)](./penjelasan/11-laporan-berkala-sarpras.md)
 12. [12 - Manajemen Kalender Hari Penting & Libur Nasional (SKB 3 Menteri)](./penjelasan/12-manajemen-hari-libur-dan-peringatan-nasional.md)
 13. [13 - Sistem Notifikasi Ruangan, Integrasi REST API Mobile & Webhook CI/CD](./penjelasan/13-notifikasi-sistem-dan-rest-api-mobile.md)
+14. [14 - Kelola Sesi Operasional & Aturan Peminjaman Minimal H-1](./penjelasan/14-kelola-sesi-dan-aturan-peminjaman-h1.md)
 
 ---
 

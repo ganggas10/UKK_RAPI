@@ -869,4 +869,3 @@ class NationalHolidaySeeder extends Seeder
         }
     }
 }
-
