@@ -57,6 +57,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return in_array($this->role, ['guru', 'organisasi', 'siswa'], true);
     }
 
+    /**
+     * Cek apakah PIC masih bertanggung jawab atas minimal satu ruangan,
+     * baik sebagai PIC utama (rooms.pic_id) maupun penugasan aktif (pic_assignments).
+     */
+    public function hasActiveRoomResponsibility(): bool
+    {
+        return $this->rooms()->exists()
+            || $this->picAssignments()->where('status', 'aktif')->exists();
+    }
+
     // Relasi
     public function rooms()
     {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
@@ -73,9 +74,26 @@ class UserController extends Controller
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Tidak bisa menghapus akun sendiri!');
         }
-        $user->delete();
+
+        $isPic = $user->isPic();
+
+        $isDeleted = DB::transaction(function () use ($user, $isPic): bool {
+            $lockedUser = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+
+            if ($isPic && $lockedUser->hasActiveRoomResponsibility()) {
+                return false;
+            }
+
+            $lockedUser->delete();
+
+            return true;
+        });
+
+        if (! $isDeleted) {
+            return back()->with('error', 'Tidak dapat menghapus pengguna ini karena masih bertanggung jawab atas satu atau lebih ruangan. Silakan pindahkan atau hapus penugasan PIC Ruang terlebih dahulu.');
+        }
 
         return redirect()->route('admin.users.index')
-            ->with('success', 'User berhasil dihapus!');
+            ->with('success', $isPic ? 'Pengguna PIC Ruang berhasil dihapus.' : 'User berhasil dihapus!');
     }
 }
