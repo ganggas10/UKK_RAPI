@@ -72,7 +72,7 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         if ($user->id === auth()->id()) {
-            return back()->with('error', 'Tidak bisa menghapus akun sendiri!');
+            return back()->with('error', 'Anda tidak dapat menghapus akun yang sedang digunakan untuk login.');
         }
 
         $isPic = $user->isPic();

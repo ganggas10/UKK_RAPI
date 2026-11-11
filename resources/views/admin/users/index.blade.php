@@ -52,11 +52,13 @@
                         <td>{{ $user->phone ?? '-' }}</td>
                         <td>
                             <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-warning">Edit</a>
-                            <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline"
-                                  onsubmit="return confirm('Hapus user {{ $user->name }}?')">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-danger">Hapus</button>
-                            </form>
+                            @if($user->id !== auth()->id())
+                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline"
+                                      onsubmit="return confirm('Hapus user {{ $user->name }}?')">
+                                    @csrf @method('DELETE')
+                                    <button class="btn btn-sm btn-danger">Hapus</button>
+                                </form>
+                            @endif
                         </td>
                     </tr>
                     @empty

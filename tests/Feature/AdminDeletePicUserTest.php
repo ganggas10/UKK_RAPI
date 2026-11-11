@@ -82,5 +82,29 @@ class AdminDeletePicUserTest extends TestCase
 
         $this->assertDatabaseMissing('users', ['id' => $guru->id]);
     }
-}
 
+    public function test_admin_cannot_delete_own_account(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)
+            ->delete(route('admin.users.destroy', $admin))
+            ->assertSessionHas('error', 'Anda tidak dapat menghapus akun yang sedang digunakan untuk login.');
+
+        $this->assertDatabaseHas('users', ['id' => $admin->id]);
+    }
+
+    public function test_delete_button_is_hidden_for_currently_authenticated_admin_in_view(): void
+    {
+        $admin = User::factory()->create(['name' => 'Admin Utama', 'role' => 'admin']);
+        $otherAdmin = User::factory()->create(['name' => 'Admin Lain', 'role' => 'admin']);
+
+        $response = $this->actingAs($admin)->get(route('admin.users.index'));
+
+        $response->assertOk();
+        // Cek bahwa form destroy untuk akun sendiri tidak ada
+        $response->assertDontSee('action="'.route('admin.users.destroy', $admin).'"', false);
+        // Cek bahwa form destroy untuk akun admin lain tetap tersedia
+        $response->assertSee('action="'.route('admin.users.destroy', $otherAdmin).'"', false);
+    }
+}
