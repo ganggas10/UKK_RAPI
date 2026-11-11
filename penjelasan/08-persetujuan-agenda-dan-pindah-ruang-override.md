@@ -48,7 +48,7 @@ Dikelola oleh [`Admin\EventController@moveRoom`](file:///c:/laragon/www/UKK_Gang
 
 ### B. Controller Agenda Waka / Admin
 - **File:** [`app/Http/Controllers/Admin/EventController.php`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php)
-  - **[`index()` (Baris 14–19)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L14-L19):** Menampilkan daftar seluruh agenda (`Event::with(['room', 'user'])->latest()->paginate(15)`).
+  - **[`index()` (Baris 15–74)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L15-L74):** Menampilkan daftar seluruh agenda dengan fitur filter komprehensif: pencarian judul/nama pengaju, status, ruangan, pengaju spesifik, serta rentang tanggal agenda (`withQueryString()`).
   - **[`create()` (Baris 21–26)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L21-L26):** Menampilkan form pembuatan agenda resmi Admin.
   - **[`store()` (Baris 28–77)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L28-L77):** Validasi sesi, pengecekan `Event::overlapping` (Baris 57–68), dan penyimpanan agenda dengan `status = 'approved'` (Baris 71–73).
   - **[`edit()` (Baris 79–84)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L79-L84):** Menampilkan halaman kelola status persetujuan/penolakan dan form pindah ruangan.

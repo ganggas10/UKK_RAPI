@@ -70,8 +70,8 @@ Sebelum menyimpan ke database, controller memanggil [`Event::overlapping($roomId
 
 ### C. Controller Web (Guru & Organisasi)
 - **File:** [`app/Http/Controllers/Guru/EventController.php`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Guru/EventController.php)
-  - **[`index()` (Baris 13–21)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Guru/EventController.php#L13-L21):** Menampilkan daftar pengajuan milik user yang sedang login (`where('user_id', auth()->id())`).
-  - **[`create()` (Baris 23–28)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Guru/EventController.php#L23-L28):** Menampilkan form pengajuan peminjaman ruangan.
+  - **[`index()` (Baris 14–59)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Guru/EventController.php#L14-L59):** Menampilkan daftar pengajuan milik user yang sedang login (`where('user_id', auth()->id())`) dengan fitur filter terpadu: pencarian judul, status peminjaman, pilihan ruangan, serta rentang tanggal pelaksanaan (`withQueryString()`).
+  - **[`create()` (Baris 61–66)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Guru/EventController.php#L61-L66):** Menampilkan form pengajuan peminjaman ruangan.
   - **[`store()` (Baris 30–92)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Guru/EventController.php#L30-L92):**
     - **Baris 32–59:** Validasi form dan konversi `start_session` & `end_session` ke `start_time` & `end_time`.
     - **Baris 66–82:** Pengecekan bentrok jadwal menggunakan `Event::overlapping(...)` dan pengembalian pesan `conflict_error`.

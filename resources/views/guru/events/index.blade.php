@@ -11,7 +11,94 @@
         </a>
     </div>
 
+    {{-- Area Filter Data Peminjaman --}}
+    <div class="card shadow-sm border mb-4 rounded-3 bg-white">
+        <div class="card-body p-3 p-lg-4">
+            <form method="GET" action="{{ route('guru.events.index') }}">
+                <div class="row g-3 align-items-end">
+                    {{-- 1. Pencarian Judul --}}
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label for="search" class="form-label fw-semibold small text-muted mb-1">
+                            <i class="bi bi-search me-1"></i>Pencarian
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                            <input type="search" id="search" name="search" class="form-control border-start-0"
+                                   placeholder="Cari judul peminjaman..." value="{{ $filters['search'] ?? '' }}">
+                        </div>
+                    </div>
+
+                    {{-- 2. Filter Status --}}
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <label for="status" class="form-label fw-semibold small text-muted mb-1">
+                            <i class="bi bi-tag me-1"></i>Status
+                        </label>
+                        <select id="status" name="status" class="form-select">
+                            <option value="">Semua Status</option>
+                            <option value="pending" @selected(($filters['status'] ?? '') === 'pending')>Pending (Menunggu)</option>
+                            <option value="approved" @selected(($filters['status'] ?? '') === 'approved')>Disetujui</option>
+                            <option value="rejected" @selected(($filters['status'] ?? '') === 'rejected')>Ditolak</option>
+                            <option value="moved" @selected(($filters['status'] ?? '') === 'moved')>Dipindah</option>
+                        </select>
+                    </div>
+
+                    {{-- 3. Filter Ruangan --}}
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <label for="room_id" class="form-label fw-semibold small text-muted mb-1">
+                            <i class="bi bi-door-open me-1"></i>Ruangan
+                        </label>
+                        <select id="room_id" name="room_id" class="form-select">
+                            <option value="">Semua Ruangan</option>
+                            @foreach($rooms as $room)
+                                <option value="{{ $room->id }}" @selected((string)($filters['room_id'] ?? '') === (string)$room->id)>
+                                    {{ $room->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- 4. Filter Tanggal Mulai --}}
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <label for="date_from" class="form-label fw-semibold small text-muted mb-1">
+                            <i class="bi bi-calendar-event me-1"></i>Tanggal Mulai
+                        </label>
+                        <input type="date" id="date_from" name="date_from" class="form-control"
+                               value="{{ $filters['date_from'] ?? '' }}">
+                    </div>
+
+                    {{-- 5. Filter Tanggal Selesai --}}
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <label for="date_to" class="form-label fw-semibold small text-muted mb-1">
+                            <i class="bi bi-calendar-check me-1"></i>Tanggal Selesai
+                        </label>
+                        <input type="date" id="date_to" name="date_to" class="form-control"
+                               value="{{ $filters['date_to'] ?? '' }}">
+                    </div>
+
+                    {{-- 6. Tombol Aksi Terapkan & Reset --}}
+                    <div class="col-12 col-lg-auto d-flex gap-2 ms-lg-auto">
+                        <button type="submit" class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-1 flex-grow-1 flex-lg-grow-0" title="Terapkan Filter">
+                            <i class="bi bi-funnel-fill"></i> Terapkan
+                        </button>
+                        <a href="{{ route('guru.events.index') }}" class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center gap-1 flex-grow-1 flex-lg-grow-0" title="Reset Seluruh Filter">
+                            <i class="bi bi-arrow-counterclockwise"></i> Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+
+            @if($errors->any())
+                <div class="alert alert-danger mt-3 mb-0 py-2">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ $errors->first() }}
+                </div>
+            @endif
+        </div>
+    </div>
+
     <div class="card shadow-sm">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <span class="text-muted small">Ditemukan <strong>{{ $events->total() }}</strong> data peminjaman</span>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead class="table-primary">
@@ -80,11 +167,17 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="7" class="text-center py-4 text-muted">Belum ada pengajuan.</td></tr>
+                    <tr><td colspan="7" class="text-center py-4 text-muted">Belum ada pengajuan yang sesuai filter.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
     </div>
+
+    @if($events->hasPages())
+        <div class="mt-4">
+            {{ $events->links() }}
+        </div>
+    @endif
 </div>
 @endsection

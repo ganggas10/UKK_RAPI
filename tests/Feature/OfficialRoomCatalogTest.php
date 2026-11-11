@@ -31,7 +31,7 @@ class OfficialRoomCatalogTest extends TestCase
         $this->assertDatabaseMissing('rooms', ['name' => 'Ruang UKS']);
         $this->assertDatabaseMissing('rooms', ['name' => 'Lab Komputer 1']);
         $this->assertDatabaseMissing('rooms', ['name' => 'Lab Komputer 2']);
-        $this->assertDatabaseHas('rooms', ['name' => 'Laboratorium Komputer 22']);
+        $this->assertDatabaseHas('rooms', ['name' => 'Lab 22']);
         $this->assertDatabaseHas('rooms', ['name' => 'Aula Bawah']);
     }
 }

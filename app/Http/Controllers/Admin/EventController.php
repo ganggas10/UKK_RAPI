@@ -7,16 +7,72 @@ use App\Models\Event;
 use App\Models\Room;
 use App\Models\RoomNotification;
 use App\Models\SchoolSession;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class EventController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $events = Event::with(['room', 'user'])->latest()->paginate(15);
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+            'status' => ['nullable', 'in:pending,approved,rejected,moved'],
+            'room_id' => ['nullable', 'integer', 'exists:rooms,id'],
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ], [
+            'date_to.after_or_equal' => 'Tanggal selesai harus sama atau setelah tanggal mulai.',
+        ]);
 
-        return view('admin.events.index', compact('events'));
+        $query = Event::with(['room', 'user', 'movedToRoom']);
+
+        // 1. Filter Pencarian Judul Agenda atau Nama Pengaju
+        if (! empty($validated['search'])) {
+            $search = $validated['search'];
+            $query->where(function ($q) use ($search): void {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhereHas('user', fn ($userQ) => $userQ->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        // 2. Filter Status Peminjaman
+        if (! empty($validated['status'])) {
+            $query->where('status', $validated['status']);
+        }
+
+        // 3. Filter Ruangan
+        if (! empty($validated['room_id'])) {
+            $query->where('room_id', $validated['room_id']);
+        }
+
+        // 4. Filter Pengaju
+        if (! empty($validated['user_id'])) {
+            $query->where('user_id', $validated['user_id']);
+        }
+
+        // 5. Filter Rentang Tanggal
+        if (! empty($validated['date_from']) || ! empty($validated['date_to'])) {
+            $query->where(function ($dateQuery) use ($validated): void {
+                if (! empty($validated['date_to'])) {
+                    $dateQuery->whereRaw('date(COALESCE(start_date, date)) <= ?', [$validated['date_to']]);
+                }
+
+                if (! empty($validated['date_from'])) {
+                    $dateQuery->whereRaw('date(COALESCE(end_date, date)) >= ?', [$validated['date_from']]);
+                }
+            });
+        }
+
+        $events = $query->latest('created_at')->paginate(15)->withQueryString();
+        $rooms = Room::orderBy('name')->get();
+        $applicants = User::whereIn('role', ['guru', 'organisasi', 'admin'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'role']);
+        $filters = $validated;
+
+        return view('admin.events.index', compact('events', 'rooms', 'applicants', 'filters'));
     }
 
     public function create()

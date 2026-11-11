@@ -36,3 +36,4 @@ Fitur **Kelola Sesi** dan **Aturan Peminjaman Minimal H-1** merupakan subsistem 
 | **View Form Admin** | [`resources/views/admin/events/create.blade.php`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/resources/views/admin/events/create.blade.php#L62-L80) | Form & Skrip H-1 / 1 Hari | Input `start_date` wajib, `end_date` opsional, kalkulator durasi hari otomatis. |
 | **View Form Guru** | [`resources/views/guru/events/create.blade.php`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/resources/views/guru/events/create.blade.php#L48-L66) | Form & Skrip H-1 / 1 Hari | Validasi frontend H-1, peringatan merah jika memilih hari ini/lampau, durasi 1 hari default. |
 | **Automated Tests** | [`tests/Feature/SchoolSessionAndBookingH1Test.php`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/tests/Feature/SchoolSessionAndBookingH1Test.php) | Full Test Suite (14 Tests) | Pengujian menyeluruh CRUD sesi, penolakan H-0, reservasi 1 hari tanpa `end_date`, dan API. |
+

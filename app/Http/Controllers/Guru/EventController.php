@@ -11,14 +11,55 @@ use Illuminate\Validation\ValidationException;
 
 class EventController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $events = Event::with(['room'])
-            ->where('user_id', auth()->id())
-            ->latest()
-            ->paginate(10);
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+            'status' => ['nullable', 'in:pending,approved,rejected,moved'],
+            'room_id' => ['nullable', 'integer', 'exists:rooms,id'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+        ], [
+            'date_to.after_or_equal' => 'Tanggal selesai harus sama atau setelah tanggal mulai.',
+        ]);
 
-        return view('guru.events.index', compact('events'));
+        $query = Event::with(['room', 'movedToRoom'])
+            ->where('user_id', auth()->id());
+
+        // 1. Filter Pencarian Judul
+        if (! empty($validated['search'])) {
+            $search = $validated['search'];
+            $query->where('title', 'like', "%{$search}%");
+        }
+
+        // 2. Filter Status Peminjaman
+        if (! empty($validated['status'])) {
+            $query->where('status', $validated['status']);
+        }
+
+        // 3. Filter Ruangan
+        if (! empty($validated['room_id'])) {
+            $query->where('room_id', $validated['room_id']);
+        }
+
+        // 4. Filter Rentang Tanggal
+        if (! empty($validated['date_from']) || ! empty($validated['date_to'])) {
+            $query->where(function ($dateQuery) use ($validated): void {
+                if (! empty($validated['date_to'])) {
+                    $dateQuery->whereRaw('date(COALESCE(start_date, date)) <= ?', [$validated['date_to']]);
+                }
+
+                if (! empty($validated['date_from'])) {
+                    $dateQuery->whereRaw('date(COALESCE(end_date, date)) >= ?', [$validated['date_from']]);
+                }
+            });
+        }
+
+        $events = $query->latest('created_at')->paginate(10)->withQueryString();
+        $rooms = Room::orderBy('name')->get();
+        $filters = $validated;
+
+        return view('guru.events.index', compact('events', 'rooms', 'filters'));
     }
 
     public function create()
