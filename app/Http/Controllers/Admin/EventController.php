@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\Room;
 use App\Models\RoomNotification;
+use App\Models\SchoolSession;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -21,8 +22,9 @@ class EventController extends Controller
     public function create()
     {
         $rooms = Room::all();
+        $sessions = SchoolSession::active()->orderBy('sort_order')->orderBy('start_time')->get();
 
-        return view('admin.events.create', compact('rooms'));
+        return view('admin.events.create', compact('rooms', 'sessions'));
     }
 
     public function store(Request $request)
@@ -31,25 +33,39 @@ class EventController extends Controller
             'title' => 'required|string|max:150',
             'description' => 'nullable|string',
             'room_id' => 'required|exists:rooms,id',
-            'date' => 'nullable|date|after_or_equal:today',
-            'start_date' => 'required_without:date|date|after_or_equal:today',
+            'date' => 'nullable|date|after:today',
+            'start_date' => 'required_without:date|date|after:today',
             'end_date' => 'required_without:date|date|after_or_equal:start_date',
-            'start_session' => 'required|in:Sesi 1,Sesi 2,Sesi 3,Sesi 4,Sesi 5,Sesi 6,Sesi 7,Sesi 8,Sesi 9,Sesi 10,Sesi 11',
-            'end_session' => 'required|in:Sesi 1,Sesi 2,Sesi 3,Sesi 4,Sesi 5,Sesi 6,Sesi 7,Sesi 8,Sesi 9,Sesi 10,Sesi 11',
+            'start_session' => ['required', 'string', 'exists:school_sessions,name'],
+            'end_session' => ['required', 'string', 'exists:school_sessions,name'],
+        ], [
+            'date.after' => 'Pengajuan peminjaman ruangan wajib dilakukan minimal 1 hari sebelum tanggal penggunaan. Silakan pilih tanggal penggunaan yang lain.',
+            'start_date.after' => 'Pengajuan peminjaman ruangan wajib dilakukan minimal 1 hari sebelum tanggal penggunaan. Silakan pilih tanggal penggunaan yang lain.',
+            'start_session.exists' => 'Sesi mulai yang dipilih tidak valid atau sudah tidak aktif.',
+            'end_session.exists' => 'Sesi selesai yang dipilih tidak valid atau sudah tidak aktif.',
         ]);
 
         $validated['start_date'] = $validated['start_date'] ?? $validated['date'];
         $validated['end_date'] = $validated['end_date'] ?? $validated['date'];
         $validated['date'] = $validated['start_date'];
 
-        if ($this->sessionNumber($validated['end_session']) < $this->sessionNumber($validated['start_session'])) {
+        $startSessionModel = SchoolSession::where('name', $validated['start_session'])->first();
+        $endSessionModel = SchoolSession::where('name', $validated['end_session'])->first();
+
+        if (! $startSessionModel || ! $startSessionModel->is_active || ! $endSessionModel || ! $endSessionModel->is_active) {
+            throw ValidationException::withMessages([
+                'start_session' => 'Sesi yang dipilih sudah dinonaktifkan.',
+            ]);
+        }
+
+        if ($this->sessionOrder($endSessionModel) < $this->sessionOrder($startSessionModel)) {
             throw ValidationException::withMessages([
                 'end_session' => 'Sesi selesai harus sama atau setelah sesi mulai.',
             ]);
         }
 
-        [$validated['start_time']] = $this->sessionTimes($validated['start_session']);
-        [, $validated['end_time']] = $this->sessionTimes($validated['end_session']);
+        $validated['start_time'] = substr($startSessionModel->start_time, 0, 5);
+        $validated['end_time'] = substr($endSessionModel->end_time, 0, 5);
         $validated['session'] = $validated['start_session'].' - '.$validated['end_session'];
         unset($validated['start_session'], $validated['end_session']);
 
@@ -183,25 +199,8 @@ class EventController extends Controller
             ->with('success', "Ruangan berhasil dipindah ke {$newRoom->name}. Guru/Organisasi sudah mendapat notifikasi.");
     }
 
-    private function sessionTimes(string $session): array
+    private function sessionOrder(SchoolSession $session): int
     {
-        return match ($session) {
-            'Sesi 1' => ['07:15', '08:00'],
-            'Sesi 2' => ['08:00', '08:45'],
-            'Sesi 3' => ['08:45', '09:30'],
-            'Sesi 4' => ['09:30', '10:15'],
-            'Sesi 5' => ['10:15', '11:00'],
-            'Sesi 6' => ['11:00', '11:45'],
-            'Sesi 7' => ['11:45', '12:30'],
-            'Sesi 8' => ['12:30', '13:15'],
-            'Sesi 9' => ['13:15', '14:00'],
-            'Sesi 10' => ['14:00', '14:45'],
-            'Sesi 11' => ['14:45', '15:30'],
-        };
-    }
-
-    private function sessionNumber(string $session): int
-    {
-        return (int) str_replace('Sesi ', '', $session);
+        return $session->sort_order ?: (int) str_replace('Sesi ', '', $session->name);
     }
 }

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Event;
 use App\Models\Room;
 use App\Models\User;
+use Database\Seeders\SchoolSessionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -12,25 +13,39 @@ class BookingDateRangeTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(SchoolSessionSeeder::class);
+    }
+
+    private function futureDate(int $daysAhead = 2): string
+    {
+        return now()->addDays($daysAhead)->format('Y-m-d');
+    }
+
     public function test_guru_can_submit_single_day_booking(): void
     {
         $user = User::factory()->create(['role' => 'guru']);
         $room = Room::create(['name' => 'Aula', 'capacity' => 100]);
+        $targetDate = $this->futureDate(2);
 
-        $response = $this->actingAs($user)->post(route('guru.events.store'), $this->bookingPayload($room, '2026-11-10', '2026-11-10'));
+        $response = $this->actingAs($user)->post(route('guru.events.store'), $this->bookingPayload($room, $targetDate, $targetDate));
 
         $response->assertRedirect(route('guru.events.index'));
         $event = Event::firstOrFail();
-        $this->assertSame('2026-11-10', $event->bookingStartDate()->toDateString());
-        $this->assertSame('2026-11-10', $event->bookingEndDate()->toDateString());
+        $this->assertSame($targetDate, $event->bookingStartDate()->toDateString());
+        $this->assertSame($targetDate, $event->bookingEndDate()->toDateString());
     }
 
     public function test_guru_can_submit_multi_day_booking_and_duration_is_inclusive(): void
     {
         $user = User::factory()->create(['role' => 'guru']);
         $room = Room::create(['name' => 'Aula', 'capacity' => 100]);
+        $startDate = $this->futureDate(2);
+        $endDate = $this->futureDate(5);
 
-        $this->actingAs($user)->post(route('guru.events.store'), $this->bookingPayload($room, '2026-11-10', '2026-11-13'));
+        $this->actingAs($user)->post(route('guru.events.store'), $this->bookingPayload($room, $startDate, $endDate));
 
         $event = Event::firstOrFail();
         $this->assertSame(4, $event->bookingDurationInDays());
@@ -40,9 +55,13 @@ class BookingDateRangeTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'guru']);
         $room = Room::create(['name' => 'Aula', 'capacity' => 100]);
-        Event::create($this->eventAttributes($room, '2026-11-10', '2026-11-13'));
+        $startDate = $this->futureDate(2);
+        $endDate = $this->futureDate(5);
+        $middleDate = $this->futureDate(4);
 
-        foreach ([['2026-11-12', '2026-11-12'], ['2026-11-13', '2026-11-13']] as [$start, $end]) {
+        Event::create($this->eventAttributes($room, $startDate, $endDate));
+
+        foreach ([[$middleDate, $middleDate], [$endDate, $endDate]] as [$start, $end]) {
             $this->actingAs($user)
                 ->post(route('guru.events.store'), $this->bookingPayload($room, $start, $end))
                 ->assertSessionHas('conflict_error');
@@ -53,9 +72,11 @@ class BookingDateRangeTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'guru']);
         $room = Room::create(['name' => 'Aula', 'capacity' => 100]);
+        $startDate = $this->futureDate(5);
+        $endDate = $this->futureDate(2);
 
         $this->actingAs($user)
-            ->post(route('guru.events.store'), $this->bookingPayload($room, '2026-11-13', '2026-11-10'))
+            ->post(route('guru.events.store'), $this->bookingPayload($room, $startDate, $endDate))
             ->assertSessionHasErrors('end_date');
     }
 
@@ -63,10 +84,14 @@ class BookingDateRangeTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'guru']);
         $room = Room::create(['name' => 'Aula', 'capacity' => 100]);
-        Event::create($this->eventAttributes($room, '2026-11-10', '2026-11-13', 'rejected'));
+        $startDate = $this->futureDate(2);
+        $endDate = $this->futureDate(5);
+        $middleDate = $this->futureDate(4);
+
+        Event::create($this->eventAttributes($room, $startDate, $endDate, 'rejected'));
 
         $this->actingAs($user)
-            ->post(route('guru.events.store'), $this->bookingPayload($room, '2026-11-12', '2026-11-12'))
+            ->post(route('guru.events.store'), $this->bookingPayload($room, $middleDate, $middleDate))
             ->assertRedirect(route('guru.events.index'));
     }
 
@@ -74,8 +99,12 @@ class BookingDateRangeTest extends TestCase
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $room = Room::create(['name' => 'Aula', 'capacity' => 100]);
-        Event::create($this->eventAttributes($room, '2026-11-10', '2026-11-13', 'approved'));
-        $pending = Event::create($this->eventAttributes($room, '2026-11-12', '2026-11-12', 'pending'));
+        $startDate = $this->futureDate(2);
+        $endDate = $this->futureDate(5);
+        $middleDate = $this->futureDate(4);
+
+        Event::create($this->eventAttributes($room, $startDate, $endDate, 'approved'));
+        $pending = Event::create($this->eventAttributes($room, $middleDate, $middleDate, 'pending'));
 
         $this->actingAs($admin)
             ->patch(route('admin.events.update', $pending), ['status' => 'approved'])
@@ -88,20 +117,23 @@ class BookingDateRangeTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'organisasi']);
         $room = Room::create(['name' => 'Aula', 'capacity' => 100]);
+        $startDate = $this->futureDate(2);
+        $endDate = $this->futureDate(5);
+        $nextDayAfterEnd = now()->addDays(6)->format('Y-m-d');
 
         $this->actingAs($user, 'sanctum')
-            ->postJson('/api/events', $this->bookingPayload($room, '2026-11-10', '2026-11-13'))
+            ->postJson('/api/events', $this->bookingPayload($room, $startDate, $endDate))
             ->assertCreated()
-            ->assertJsonPath('data.start_date', '2026-11-10')
-            ->assertJsonPath('data.end_date', '2026-11-13')
+            ->assertJsonPath('data.start_date', $startDate)
+            ->assertJsonPath('data.end_date', $endDate)
             ->assertJsonPath('data.duration_days', 4);
 
         Event::query()->update(['status' => 'approved']);
 
         $this->getJson(route('calendar.events'))
             ->assertOk()
-            ->assertJsonPath('0.start', '2026-11-10T08:00')
-            ->assertJsonPath('0.end', '2026-11-14T11:00');
+            ->assertJsonPath('0.start', $startDate.'T08:00')
+            ->assertJsonPath('0.end', $nextDayAfterEnd.'T11:00');
     }
 
     private function bookingPayload(Room $room, string $startDate, string $endDate): array

@@ -71,6 +71,9 @@ Route::get('/rooms/available', [EventApiController::class, 'checkAvailability'])
 // Daftar ruangan (publik)
 Route::get('/rooms', [ComplaintApiController::class, 'rooms'])->name('api.rooms.index');
 
+// Daftar sesi aktif (publik untuk form peminjaman mobile)
+Route::get('/sessions', [EventApiController::class, 'sessions'])->name('api.sessions.index');
+
 // Webhook Migrasi & Seeder Otomatis untuk Shared Hosting (No-SSH)
 Route::get('deploy-migrate-{secret}', function (Request $request, string $secret) {
     $expectedSecret = config('app.deploy_secret') ?: env('DEPLOY_SECRET') ?: 'skansaba_super_secret_token_12345';
@@ -94,13 +97,13 @@ Route::get('deploy-migrate-{secret}', function (Request $request, string $secret
         // 3. Sambungkan symlink storage publik
         try {
             Artisan::call('storage:link');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
         }
 
         // 4. Bersihkan dan perbarui cache optimasi
         try {
             Artisan::call('optimize:clear');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
         }
 
         return response()->json([
@@ -109,7 +112,7 @@ Route::get('deploy-migrate-{secret}', function (Request $request, string $secret
             'migrate_output' => $migrateOutput,
             'seed_output' => $seedOutput,
         ]);
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         return response()->json([
             'status' => 'error',
             'message' => 'Gagal migrasi: '.$e->getMessage(),

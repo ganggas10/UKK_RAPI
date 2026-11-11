@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\NationalHolidayController;
 use App\Http\Controllers\Admin\PicAssignmentController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\RoomController;
+use App\Http\Controllers\Admin\SchoolSessionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\Guru\ComplaintController as GuruComplaintController;
@@ -71,6 +72,10 @@ Route::middleware(['auth'])->group(function () {
 
         // Manajemen Ruangan
         Route::resource('rooms', RoomController::class);
+
+        // Manajemen Sesi Jam Operasional
+        Route::patch('/sessions/{session}/toggle', [SchoolSessionController::class, 'toggle'])->name('sessions.toggle');
+        Route::resource('sessions', SchoolSessionController::class)->only(['index', 'store', 'update', 'destroy']);
 
         // Manajemen Hari Penting & Kalender Nasional
         Route::post('/national-holidays/sync', [NationalHolidayController::class, 'syncDefault'])->name('national-holidays.sync');

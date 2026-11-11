@@ -1,17 +1,19 @@
-# Fitur 07: Pengajuan Peminjaman Ruangan & Pencegahan Bentrok Jadwal (Anti-Bentrok)
+# Fitur 07: Pengajuan Peminjaman Ruangan, Kelola Sesi & Aturan H-1 (Anti-Bentrok)
 
 ## 1. Deskripsi & Tujuan Fitur
 Fitur ini memungkinkan **Guru** dan **Organisasi Siswa** mengajukan permohonan peminjaman ruangan untuk kegiatan belajar-mengajar, rapat, ujian, maupun kegiatan ekstrakurikuler.
 
 Keunggulan utama fitur ini adalah:
-1. **Sistem Penjadwalan Berbasis Sesi Jam Pelajaran (`Sesi 1` s/d `Sesi 11`):** Memudahkan pemilihan waktu tanpa perlu mengetik menit secara manual, serta mendukung kegiatan 1 hari (*single-day*) maupun rentang beberapa hari (*multi-day*).
-2. **Algoritma Pencegahan Bentrok Jadwal (*Conflict Prevention*):** Menolak secara otomatis di sisi server apabila ruangan yang dipilih sudah dipesan oleh kegiatan lain pada irisan tanggal dan jam yang sama.
+1. **Fitur Kelola Sesi (Admin):** Waka/Admin dapat mengelola pembagian sesi jam operasional (tambah, edit nama dan jam, aktif/nonaktifkan, dan hapus sesi). Sesi aktif otomatis tampil pada dropdown peminjaman.
+2. **Aturan Peminjaman Minimal H-1 (24 Jam Kalender):** Pengajuan wajib dilakukan minimal 1 hari sebelum tanggal penggunaan ruangan (`after:today`). Pengajuan pada hari yang sama otomatis ditolak baik di frontend maupun backend.
+3. **Algoritma Pencegahan Bentrok Jadwal (*Conflict Prevention*):** Menolak secara otomatis di sisi server apabila ruangan yang dipilih sudah dipesan oleh kegiatan lain pada irisan tanggal dan jam yang sama.
 
 ---
 
 ## 2. Pengguna (Role) yang Terlibat
-- **Guru & Organisasi (`guru`, `organisasi`):** Mengajukan peminjaman ruangan baru serta melihat daftar & detail pengajuan miliknya (baik melalui Portal Web `/guru/events` maupun Aplikasi Mobile `/api/events`).
-- **Waka / Admin (`admin`):** Meninjau dan menyetujui/menolak pengajuan yang masuk.
+- **Guru & Organisasi (`guru`, `organisasi`):** Mengajukan peminjaman ruangan baru dengan memilih sesi aktif serta melihat daftar & detail pengajuan miliknya (baik melalui Portal Web `/guru/events` maupun Aplikasi Mobile `/api/events`).
+- **Waka / Admin (`admin`):** Mengelola sesi jam operasional sekolah (`/admin/sessions`), meninjau, menyetujui, menolak pengajuan, atau membuat agenda resmi sekolah.
+- **PIC Ruang (`pic`):** Memantau jadwal peminjaman ruangan yang menjadi tanggung jawabnya.
 
 ---
 

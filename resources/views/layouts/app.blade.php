@@ -65,6 +65,11 @@
                         <i class="bi bi-door-open"></i>
                         <span>Ruangan</span>
                     </a>
+                    <a class="rapi-nav-link {{ request()->routeIs('admin.sessions.*') ? 'active' : '' }}"
+                       href="{{ route('admin.sessions.index') }}">
+                        <i class="bi bi-clock-history"></i>
+                        <span>Kelola Sesi</span>
+                    </a>
                     <a class="rapi-nav-link {{ request()->routeIs('admin.pic-assignments.*') ? 'active' : '' }}"
                        href="{{ route('admin.pic-assignments.index') }}">
                         <i class="bi bi-person-badge"></i>
