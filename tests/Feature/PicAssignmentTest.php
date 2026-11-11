@@ -73,4 +73,27 @@ class PicAssignmentTest extends TestCase
             'status_repair' => 'Sudah Diperbaiki',
         ])->assertForbidden();
     }
+
+    public function test_pic_cannot_change_complaint_status_after_it_is_already_repaired(): void
+    {
+        $pic = User::factory()->create(['role' => 'pic']);
+        $room = Room::create(['name' => 'Lab D', 'capacity' => 20, 'pic_id' => $pic->id]);
+        $complaint = $room->complaints()->create([
+            'reporter_id' => User::factory()->create(['role' => 'guru'])->id,
+            'description' => 'AC bocor sudah selesai diperbaiki',
+            'status_repair' => 'Sudah Diperbaiki',
+            'pic_notes' => 'Freon dan pipa sudah diganti.',
+        ]);
+
+        $this->actingAs($pic)->patch(route('pic.complaints.status', $complaint), [
+            'status_repair' => 'Belum Diperbaiki',
+            'pic_notes' => 'Diubah kembali',
+        ])->assertSessionHas('error', 'Pengaduan yang sudah diperbaiki bersifat final dan tidak dapat diubah kembali.');
+
+        $this->assertDatabaseHas('complaints', [
+            'id' => $complaint->id,
+            'status_repair' => 'Sudah Diperbaiki',
+            'pic_notes' => 'Freon dan pipa sudah diganti.',
+        ]);
+    }
 }

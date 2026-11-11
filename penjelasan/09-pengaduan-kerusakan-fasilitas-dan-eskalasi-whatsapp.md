@@ -19,7 +19,7 @@ Fitur **Pengaduan Kerusakan Fasilitas** menghubungkan pengguna ruangan (**Guru, 
 Setiap pengaduan hanya memiliki 3 nilai status standar pada kolom `status_repair`:
 1. **`Belum Diperbaiki`** — Status awal saat laporan kerusakan baru dikirimkan.
 2. **`Menunggu Spare Part`** — Status ketika PIC sudah memeriksa kerusakan namun perbaikan tertunda karena menunggu pengadaan suku cadang/alat.
-3. **`Sudah Diperbaiki`** — Status akhir ketika fasilitas telah selesai diperbaiki oleh PIC Ruang.
+3. **`Sudah Diperbaiki`** — Status akhir (bersifat **final / terkunci**) ketika fasilitas telah selesai diperbaiki oleh PIC Ruang. Setelah mencapai status ini, pengaduan tidak dapat diubah kembali ke status lainnya.
 
 ---
 
@@ -35,7 +35,9 @@ Dikelola oleh [`Pic\ComplaintController@updateStatus`](file:///c:/laragon/www/UK
 1. **Validasi Otorisasi Delegasi Ruangan (Termasuk Multi-PIC):**
    - Sebelum PIC dapat mengubah status sebuah pengaduan, sistem memeriksa apakah `room_id` pengaduan tersebut dipegang oleh PIC yang sedang login (baik melalui kolom `pic_id` di tabel `rooms` maupun sebagai ko-PIC aktif di `activePicAssignments`).
    - Jika bukan ruangan tanggung jawabnya, sistem menolak dengan `abort(403, 'Anda tidak memiliki izin untuk mengelola ruangan ini.')`.
-2. **Validasi 3 Status Mutlak:**
+2. **Kunci Status Final (`Sudah Diperbaiki`):**
+   - Jika pengaduan sudah berstatus `Sudah Diperbaiki`, sistem menolak segala percobaan perubahan status di sisi backend dan menyembunyikan form ubah status di antarmuka PIC (digantikan indikator terkunci *"Sudah Diperbaiki (Status Final)"*).
+3. **Validasi 3 Status Mutlak:**
    - Memvalidasi `status_repair` wajib salah satu dari: `Belum Diperbaiki`, `Menunggu Spare Part`, atau `Sudah Diperbaiki`, beserta catatan opsional `pic_notes`.
 
 ### C. Eskalasi WhatsApp dari Waka/Admin ke PIC Ruang (`GET /admin/complaints/{complaint}/whatsapp`)

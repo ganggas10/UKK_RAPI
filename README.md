@@ -46,7 +46,7 @@ Sistem membagi hak akses pengguna ke dalam **5 peran (role)** sesuai tugas dan t
    Setiap laporan kerusakan fasilitas wajib menyertakan unggahan foto bukti (maks. 5 MB) dan hanya dapat diperbarui oleh PIC Ruang melalui 3 tahapan status mutlak:
    - 🔴 `Belum Diperbaiki`
    - 🟡 `Menunggu Spare Part`
-   - 🟢 `Sudah Diperbaiki`
+   - 🟢 `Sudah Diperbaiki` *(bersifat **final / terkunci** dan tidak dapat diubah kembali)*
 4. **Eskalasi Langsung via WhatsApp (*WhatsApp Escalation*):**
    Waka / Admin dapat mengirimkan peringatan tindak lanjut secara langsung ke nomor WhatsApp PIC Ruang terkait hanya dengan satu klik tombol (`wa.me`) dari Dashboard Admin.
 5. **Override Pindah Ruangan & Notifikasi Otomatis (*Room Override & Auto-Notification*):**

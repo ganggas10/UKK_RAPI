@@ -52,6 +52,11 @@ class ComplaintController extends Controller
             abort(403, 'Anda tidak memiliki izin untuk mengelola ruangan ini.');
         }
 
+        // Jika status pengaduan sudah "Sudah Diperbaiki", maka bersifat final dan tidak bisa diubah lagi
+        if ($complaint->status_repair === 'Sudah Diperbaiki') {
+            return back()->with('error', 'Pengaduan yang sudah diperbaiki bersifat final dan tidak dapat diubah kembali.');
+        }
+
         // ============================================================
         // LOGIKA BISNIS #3: WORKFLOW STATE (3 STATUS MUTLAK)
         // ============================================================

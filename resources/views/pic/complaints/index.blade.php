@@ -12,6 +12,12 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show">
+            {{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     <div class="row g-4">
         @forelse($complaints as $complaint)
         <div class="col-12 col-md-6 col-xl-4">
@@ -47,23 +53,38 @@
                     <p class="text-muted small mb-2">{{ $complaint->description }}</p>
                     <small class="text-muted">Lapor: {{ $complaint->reporter->name }} | {{ $complaint->created_at->format('d/m/Y') }}</small>
 
-                    {{-- Form update status --}}
-                    <form action="{{ route('pic.complaints.status', $complaint) }}" method="POST" class="mt-3">
-                        @csrf @method('PATCH')
-                        <select name="status_repair" class="form-select form-select-sm mb-2">
-                            @foreach(['Belum Diperbaiki', 'Menunggu Spare Part', 'Sudah Diperbaiki'] as $status)
-                                <option value="{{ $status }}"
-                                    {{ $complaint->status_repair === $status ? 'selected' : '' }}>
-                                    {{ $status }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <textarea name="pic_notes" class="form-control form-control-sm mb-2" rows="2"
-                                  placeholder="Catatan/laporan kondisi...">{{ $complaint->pic_notes }}</textarea>
-                        <button type="submit" class="btn btn-primary btn-sm w-100">
-                            💾 Perbarui Status
-                        </button>
-                    </form>
+                    {{-- Form update status / Status Final --}}
+                    @if($complaint->status_repair === 'Sudah Diperbaiki')
+                        <div class="mt-3 pt-3 border-top">
+                            @if($complaint->pic_notes)
+                                <div class="bg-light rounded p-2 mb-2 small text-secondary">
+                                    <strong class="d-block text-dark mb-1">Catatan Perbaikan PIC:</strong>
+                                    {{ $complaint->pic_notes }}
+                                </div>
+                            @endif
+                            <div class="d-flex align-items-center justify-content-center gap-2 py-2 px-3 rounded bg-success bg-opacity-10 text-success fw-semibold small">
+                                <i class="bi bi-lock-fill"></i>
+                                <span>Sudah Diperbaiki (Status Final)</span>
+                            </div>
+                        </div>
+                    @else
+                        <form action="{{ route('pic.complaints.status', $complaint) }}" method="POST" class="mt-3">
+                            @csrf @method('PATCH')
+                            <select name="status_repair" class="form-select form-select-sm mb-2">
+                                @foreach(['Belum Diperbaiki', 'Menunggu Spare Part', 'Sudah Diperbaiki'] as $status)
+                                    <option value="{{ $status }}"
+                                        {{ $complaint->status_repair === $status ? 'selected' : '' }}>
+                                        {{ $status }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <textarea name="pic_notes" class="form-control form-control-sm mb-2" rows="2"
+                                      placeholder="Catatan/laporan kondisi...">{{ $complaint->pic_notes }}</textarea>
+                            <button type="submit" class="btn btn-primary btn-sm w-100">
+                                💾 Perbarui Status
+                            </button>
+                        </form>
+                    @endif
                 </div>
             </div>
         </div>
