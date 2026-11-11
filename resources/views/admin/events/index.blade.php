@@ -9,9 +9,14 @@
             <h2 class="fw-bold mb-1">Manajemen Agenda & Peminjaman</h2>
             <p class="text-muted small mb-0">Kelola persetujuan, penolakan, dan pemindahan agenda peminjaman ruangan sekolah.</p>
         </div>
-        <a href="{{ route('admin.events.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-1"></i> Tambah Agenda
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('admin.events.move-history') }}" class="btn btn-outline-primary">
+                <i class="bi bi-clock-history me-1"></i> Riwayat Pindah Ruang
+            </a>
+            <a href="{{ route('admin.events.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i> Tambah Agenda
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -251,5 +256,104 @@
     @endforeach
 
     <div class="mt-4">{{ $events->links() }}</div>
+
+    {{-- ============================================================ --}}
+    {{-- MODAL KONFIRMASI PENGIRIMAN WHATSAPP SAAT PINDAH RUANGAN --}}
+    {{-- ============================================================ --}}
+    @if(isset($pendingWaMove) && $pendingWaMove)
+    <div class="modal fade" id="waConfirmModal" tabindex="-1" aria-labelledby="waConfirmModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold" id="waConfirmModalLabel">
+                        <i class="bi bi-whatsapp me-2"></i>Konfirmasi Pengiriman WhatsApp
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-success d-flex align-items-center mb-3 py-2">
+                        <i class="bi bi-check-circle-fill fs-5 me-2"></i>
+                        <div>
+                            <strong>Perubahan ruangan berhasil disimpan.</strong> Apakah Anda ingin mengirimkan pemberitahuan WhatsApp kepada Guru/Organisasi yang bersangkutan?
+                        </div>
+                    </div>
+
+                    @if(! $pendingWaMove->hasValidPhone())
+                        <div class="alert alert-warning py-2 small mb-3">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            <strong>Perhatian:</strong> Nomor WhatsApp pemohon belum tersedia atau formatnya tidak valid pada profil pengguna. Pesan WhatsApp tidak dapat dikirim secara otomatis sampai nomor kontak diperbarui di menu Manajemen Pengguna.
+                        </div>
+                    @endif
+
+                    <div class="card bg-light border-0 mb-3">
+                        <div class="card-body p-3">
+                            <div class="row g-2 small">
+                                <div class="col-sm-6">
+                                    <span class="text-muted">Nama Penerima:</span>
+                                    <div class="fw-bold">{{ $pendingWaMove->user?->name ?? 'Pengaju' }} ({{ ucfirst($pendingWaMove->user?->role ?? 'User') }})</div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span class="text-muted">Nomor WhatsApp:</span>
+                                    <div class="fw-bold {{ $pendingWaMove->hasValidPhone() ? 'text-success' : 'text-danger' }}">
+                                        {{ $pendingWaMove->formattedPhone() ? '+'.$pendingWaMove->formattedPhone() : ($pendingWaMove->target_phone ?: 'Belum tersedia') }}
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span class="text-muted">Ruangan Sebelumnya:</span>
+                                    <div class="fw-semibold text-danger">{{ $pendingWaMove->old_room_name }}</div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span class="text-muted">Ruangan Pengganti:</span>
+                                    <div class="fw-semibold text-success">{{ $pendingWaMove->new_room_name }}</div>
+                                </div>
+                                <div class="col-12">
+                                    <span class="text-muted">Alasan Pemindahan:</span>
+                                    <div class="fw-semibold">{{ $pendingWaMove->move_reason }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label fw-semibold small text-muted mb-1">
+                            <i class="bi bi-chat-text me-1"></i>Isi Pesan WhatsApp yang Akan Dikirim:
+                        </label>
+                        <div class="p-3 bg-white rounded border small" style="white-space: pre-wrap; font-family: inherit; line-height: 1.5; max-height: 220px; overflow-y: auto;">{{ $pendingWaMove->wa_message }}</div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <form action="{{ route('admin.events.move.cancel-whatsapp', $pendingWaMove) }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-secondary">Batal</button>
+                    </form>
+
+                    @if($pendingWaMove->hasValidPhone())
+                        <a href="{{ route('admin.events.move.whatsapp', $pendingWaMove) }}" target="_blank"
+                           class="btn btn-success d-inline-flex align-items-center gap-1"
+                           onclick="setTimeout(() => { const m = bootstrap.Modal.getInstance(document.getElementById('waConfirmModal')); if (m) m.hide(); window.location.reload(); }, 1200);">
+                            <i class="bi bi-whatsapp"></i> Kirim WhatsApp
+                        </a>
+                    @else
+                        <button type="button" class="btn btn-success opacity-50" disabled title="Nomor HP belum tersedia pada profil pengguna">
+                            <i class="bi bi-whatsapp"></i> Kirim WhatsApp
+                        </button>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modalEl = document.getElementById('waConfirmModal');
+            if (modalEl) {
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            }
+        });
+    </script>
+    @endpush
+    @endif
 </div>
 @endsection

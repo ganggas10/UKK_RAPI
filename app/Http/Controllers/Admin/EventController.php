@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\Room;
+use App\Models\RoomMoveHistory;
 use App\Models\RoomNotification;
 use App\Models\SchoolSession;
 use App\Models\User;
@@ -72,7 +73,12 @@ class EventController extends Controller
             ->get(['id', 'name', 'role']);
         $filters = $validated;
 
-        return view('admin.events.index', compact('events', 'rooms', 'applicants', 'filters'));
+        $pendingWaMove = null;
+        if (session()->has('wa_confirm_move_id')) {
+            $pendingWaMove = RoomMoveHistory::with(['event', 'user'])->find(session('wa_confirm_move_id'));
+        }
+
+        return view('admin.events.index', compact('events', 'rooms', 'applicants', 'filters', 'pendingWaMove'));
     }
 
     public function create()
@@ -252,8 +258,80 @@ class EventController extends Controller
             'is_read' => false,
         ]);
 
+        // ============================================================
+        // Catat Riwayat Pemindahan Ruangan & Siapkan Notifikasi WhatsApp
+        // ============================================================
+        $waMessage = RoomMoveHistory::generateWhatsAppMessage($event, $oldRoom, $newRoom->name, $validated['move_reason']);
+
+        $moveHistory = RoomMoveHistory::create([
+            'event_id' => $event->id,
+            'user_id' => $event->user_id,
+            'admin_id' => auth()->id(),
+            'old_room_id' => $originalRoomId,
+            'new_room_id' => $newRoom->id,
+            'old_room_name' => $oldRoom,
+            'new_room_name' => $newRoom->name,
+            'target_phone' => $event->user?->phone,
+            'move_reason' => $validated['move_reason'],
+            'wa_message' => $waMessage,
+            'wa_status' => 'belum_dikirim',
+        ]);
+
         return redirect()->route('admin.events.index')
-            ->with('success', "Ruangan berhasil dipindah ke {$newRoom->name}. Guru/Organisasi sudah mendapat notifikasi.");
+            ->with('success', "Ruangan berhasil dipindah ke {$newRoom->name}.")
+            ->with('wa_confirm_move_id', $moveHistory->id);
+    }
+
+    public function sendMoveWhatsApp(RoomMoveHistory $moveHistory)
+    {
+        $moveHistory->load(['event', 'user']);
+
+        $phone = $moveHistory->formattedPhone();
+
+        if (empty($phone)) {
+            $moveHistory->update(['wa_status' => 'gagal_dikirim']);
+
+            return redirect()->route('admin.events.index')
+                ->with('error', 'Gagal mengirim pemberitahuan WhatsApp: Nomor HP pemohon tidak tersedia atau formatnya tidak valid. Perubahan ruangan tetap tersimpan. Silakan periksa data kontak.');
+        }
+
+        $moveHistory->update([
+            'wa_status' => 'berhasil_dikirim',
+            'wa_sent_at' => now(),
+        ]);
+
+        $waUrl = 'https://wa.me/'.$phone.'?text='.urlencode($moveHistory->wa_message ?? '');
+
+        return redirect()->away($waUrl);
+    }
+
+    public function cancelMoveWhatsApp(RoomMoveHistory $moveHistory)
+    {
+        return redirect()->route('admin.events.index')
+            ->with('info', 'Pemberitahuan WhatsApp dibatalkan. Perubahan ruangan tetap tersimpan.');
+    }
+
+    public function moveHistory(Request $request)
+    {
+        $query = RoomMoveHistory::with(['event', 'user', 'admin', 'oldRoom', 'newRoom']);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search): void {
+                $q->whereHas('event', fn ($eq) => $eq->where('title', 'like', "%{$search}%"))
+                    ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', "%{$search}%"))
+                    ->orWhere('old_room_name', 'like', "%{$search}%")
+                    ->orWhere('new_room_name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('wa_status')) {
+            $query->where('wa_status', $request->wa_status);
+        }
+
+        $moveHistories = $query->latest()->paginate(15)->withQueryString();
+
+        return view('admin.events.move_history', compact('moveHistories'));
     }
 
     private function sessionOrder(SchoolSession $session): int

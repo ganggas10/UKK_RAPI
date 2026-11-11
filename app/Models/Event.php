@@ -78,6 +78,11 @@ class Event extends Model
         return $this->belongsTo(User::class, 'moved_by');
     }
 
+    public function roomMoveHistories()
+    {
+        return $this->hasMany(RoomMoveHistory::class);
+    }
+
     public function creatorRole(): string
     {
         return $this->user?->role ?? 'guru';

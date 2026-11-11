@@ -87,7 +87,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pic-assignments/{picAssignment}/edit', [PicAssignmentController::class, 'edit'])->name('pic-assignments.edit');
         Route::resource('pic-assignments', PicAssignmentController::class)->except(['create', 'edit']);
 
-        // Manajemen Event (termasuk override/pindah ruang)
+        // Manajemen Event (termasuk override/pindah ruang & notifikasi WhatsApp)
+        Route::get('/events/move-history', [AdminEventController::class, 'moveHistory'])->name('events.move-history');
+        Route::get('/events/move-history/{moveHistory}/whatsapp', [AdminEventController::class, 'sendMoveWhatsApp'])->name('events.move.whatsapp');
+        Route::post('/events/move-history/{moveHistory}/whatsapp', [AdminEventController::class, 'sendMoveWhatsApp'])->name('events.move.whatsapp.post');
+        Route::post('/events/move-history/{moveHistory}/cancel-whatsapp', [AdminEventController::class, 'cancelMoveWhatsApp'])->name('events.move.cancel-whatsapp');
         Route::resource('events', AdminEventController::class);
         Route::post('/events/{event}/move', [AdminEventController::class, 'moveRoom'])->name('events.move');
 

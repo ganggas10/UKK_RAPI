@@ -28,39 +28,43 @@ Dikelola oleh [`Admin\EventController@update`](file:///c:/laragon/www/UKK_Gangga
 2. **Jika Disetujui (`approved`):** Sistem kembali memvalidasi `Event::overlapping(..., $event->id)` untuk memastikan tidak ada jadwal lain yang bentrok sebelum menyetujui.
 3. **Jika Ditolak (`rejected`):** Admin wajib mengisi pesan singkat penolakan (`rejection_message`) dan catatan detail penolakan (`rejection_notes`).
 
-### C. Override / Pemindahan Ruangan (`POST /admin/events/{event}/move`)
-Dikelola oleh [`Admin\EventController@moveRoom`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L130-L184):
+### C. Override / Pemindahan Ruangan & Notifikasi WhatsApp (`POST /admin/events/{event}/move`)
+Dikelola oleh [`Admin\EventController@moveRoom`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L205-L270):
 1. Admin memilih **Ruangan Tujuan Baru (`new_room_id`)** (wajib berbeda dari `room_id` saat ini) dan wajib menuliskan **Alasan Pemindahan (`move_reason`, minimal 10 karakter)**.
 2. **Validasi Bentrok di Ruangan Tujuan:** Sistem mengecek apakah ruangan tujuan baru tersebut kosong pada tanggal dan jam pelaksanaan agenda (`Event::overlapping($validated['new_room_id'], ...)`). Jika ruangan baru sudah dipesan kegiatan lain, pemindahan ditolak.
 3. **Pembaruan Status & Ruangan:**
    - Mengubah `room_id` dan `moved_to_room_id` ke ruangan baru.
    - Mencatat `moved_by = auth()->id()`, `move_reason`, dan mengubah status menjadi `'moved'`.
-4. **Pengiriman Notifikasi Otomatis:** Sistem membuat entri baru di tabel `room_notifications` (`RoomNotification::create`) untuk pemilik agenda (`$event->user_id`) dengan judul `"⚠️ Ruangan Kamu Dipindahkan"` yang memuat nama ruangan asal, nama ruangan baru, tanggal kegiatan, dan alasan pemindahan.
+4. **Pengiriman Notifikasi Otomatis:** Sistem membuat entri baru di tabel `room_notifications` (`RoomNotification::create`) untuk pemilik agenda (`$event->user_id`).
+5. **Pencatatan Riwayat & Konfirmasi WhatsApp:**
+   - Sistem mencatat riwayat pemindahan pada tabel `room_move_histories` dengan status `belum_dikirim`.
+   - Mengarahkan Admin kembali ke halaman agenda dengan memunculkan **Modal Konfirmasi Pengiriman WhatsApp**.
+   - Admin dapat meninjau ringkasan pemindahan serta pratinjau pesan otomatis sebelum menekan tombol **Kirim WhatsApp** (`wa.me`) atau **Batal**.
 
 ---
 
 ## 4. Posisi Source Code (Lokasi File, Method & Baris Kode)
 
-### A. Definisi Route Kelola Agenda & Pindah Ruang
-- **File:** [`routes/web.php`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/routes/web.php#L86-L87)
-  - **Baris 86:** `Route::resource('events', AdminEventController::class);` — Rute CRUD agenda Admin (`/admin/events`).
-  - **Baris 87:** `Route::post('/events/{event}/move', [AdminEventController::class, 'moveRoom'])->name('events.move');` — Rute eksekusi *override* pindah ruangan.
+### A. Definisi Route Kelola Agenda, Pindah Ruang & WhatsApp
+- **File:** [`routes/web.php`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/routes/web.php#L90-L96)
+  - `Route::get('/events/move-history', ...)` — Halaman tabel riwayat pemindahan ruangan.
+  - `Route::get('/events/move-history/{moveHistory}/whatsapp', ...)` — Eksekusi pengiriman pesan WhatsApp ke pemilik agenda.
+  - `Route::post('/events/move-history/{moveHistory}/cancel-whatsapp', ...)` — Pembatalan pengiriman WhatsApp.
+  - `Route::resource('events', AdminEventController::class);` — Rute CRUD agenda Admin (`/admin/events`).
+  - `Route::post('/events/{event}/move', [AdminEventController::class, 'moveRoom'])->name('events.move');` — Rute eksekusi *override* pindah ruangan.
 
 ### B. Controller Agenda Waka / Admin
 - **File:** [`app/Http/Controllers/Admin/EventController.php`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php)
-  - **[`index()` (Baris 15–74)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L15-L74):** Menampilkan daftar seluruh agenda dengan fitur filter komprehensif: pencarian judul/nama pengaju, status, ruangan, pengaju spesifik, serta rentang tanggal agenda (`withQueryString()`).
-  - **[`create()` (Baris 21–26)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L21-L26):** Menampilkan form pembuatan agenda resmi Admin.
-  - **[`store()` (Baris 28–77)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L28-L77):** Validasi sesi, pengecekan `Event::overlapping` (Baris 57–68), dan penyimpanan agenda dengan `status = 'approved'` (Baris 71–73).
-  - **[`edit()` (Baris 79–84)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L79-L84):** Menampilkan halaman kelola status persetujuan/penolakan dan form pindah ruangan.
-  - **[`update()` (Baris 86–117)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L86-L117):** Validasi perubahan status (`pending`, `approved`, `rejected`), wajib isi `rejection_message` & `rejection_notes` jika ditolak (Baris 90–91), serta validasi anti-bentrok saat disetujui (Baris 98–111).
-  - **[`destroy()` (Baris 119–125)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L119-L125):** Menghapus data agenda.
-  - **[`moveRoom()` (Baris 130–184)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L130-L184):**
-    - **Baris 132–138:** Validasi `new_room_id` (`different:room_id`) dan `move_reason` (`min:10`).
-    - **Baris 144–155:** Pengecekan bentrok di ruangan tujuan baru (`Event::overlapping`).
-    - **Baris 161–167:** Update ruangan, pencatatan `moved_by`, dan perubahan status menjadi `'moved'`.
-    - **Baris 172–180:** Pembuatan notifikasi otomatis `RoomNotification::create(...)` untuk Guru/Organisasi pemilik agenda.
+  - **[`index()` (Baris 16–76)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L16-L76):** Menampilkan daftar agenda dengan filter dan memicu modal konfirmasi WhatsApp jika ada pemindahan baru.
+  - **[`moveRoom()` (Baris 205–269)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L205-L269):** Validasi bentrok ruangan baru, mutasi data event, pembuatan notifikasi in-app, pencatatan `RoomMoveHistory`, dan trigger modal konfirmasi WhatsApp.
+  - **[`sendMoveWhatsApp()` (Baris 271–290)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L271-L290):** Normalisasi nomor WhatsApp penerima (format internasional `628...`), pembaruan status `berhasil_dikirim` / `wa_sent_at`, dan pengalihan ke API `https://wa.me`.
+  - **[`cancelMoveWhatsApp()` (Baris 292–296)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L292-L296):** Pembatalan pengiriman WhatsApp dengan tetap mempertahankan perubahan ruangan.
+  - **[`moveHistory()` (Baris 298–318)](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Http/Controllers/Admin/EventController.php#L298-L318):** Menampilkan halaman riwayat pemindahan ruangan lengkap dengan filter dan tombol kirim ulang.
 
-### C. Views Terkait
-- [`resources/views/admin/events/index.blade.php`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/resources/views/admin/events/index.blade.php) — Tabel daftar seluruh agenda dan tombol aksi.
-- [`resources/views/admin/events/create.blade.php`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/resources/views/admin/events/create.blade.php) — Form tambah agenda resmi oleh Waka/Admin.
-- [`resources/views/admin/events/edit.blade.php`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/resources/views/admin/events/edit.blade.php) — Form persetujuan/penolakan agenda serta form *Override / Pindah Ruangan*.
+### C. Model & Migrasi
+- **Model:** [`app/Models/RoomMoveHistory.php`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/app/Models/RoomMoveHistory.php) — Helper format nomor WhatsApp dan generator template pesan.
+- **Migrasi:** [`database/migrations/2026_11_11_143701_create_room_move_histories_table.php`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/database/migrations/2026_11_11_143701_create_room_move_histories_table.php) — Tabel `room_move_histories`.
+
+### D. Views Terkait
+- [`resources/views/admin/events/index.blade.php`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/resources/views/admin/events/index.blade.php) — Tabel agenda, form modal pindah ruangan, dan modal konfirmasi pengiriman WhatsApp.
+- [`resources/views/admin/events/move_history.blade.php`](file:///c:/laragon/www/UKK_Ganggas/UKK_Ganggas/resources/views/admin/events/move_history.blade.php) — Halaman pemantauan riwayat pemindahan ruangan sekolah dan tombol kirim ulang WhatsApp.
